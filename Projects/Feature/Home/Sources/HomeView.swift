@@ -26,19 +26,19 @@ final class HomeViewModel: ObservableObject {
 }
 
 /// 🏠 홈 (활동·주변) — 인사 + 🔥방금 남들이 남긴 순간 + 📍내 주변 남길 자리 + ✨둘러볼 전시.
-struct HomeView: View {
+public struct HomeView: View {
     @StateObject private var vm: HomeViewModel
     private let store: any TraceStore
     private let user: User
     @State private var claimingPlace: Place?
 
-    init(store: any TraceStore, user: User) {
+    public init(store: any TraceStore, user: User) {
         self.store = store
         self.user = user
         _vm = StateObject(wrappedValue: HomeViewModel(store: store))
     }
 
-    var body: some View {
+    public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 greeting

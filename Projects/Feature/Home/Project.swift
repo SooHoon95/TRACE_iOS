@@ -7,19 +7,15 @@ import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.framework(
-  name: "MainTab",
+  name: "Home",
   platform: .iOS,
   dependencies: [
     .appFoundation,
     .uiComponent,
     .domain,
     .router,
-    // Tab roots hosted by the shell
-    .feature(target: "Home"),
-    .feature(target: "Collection"),
-    .feature(target: "Identity"),
-    .feature(target: "LeaveTrace"),
-    .feature(target: "Map")
+    // 홈의 "너도 남겨" → 순간 남기기 플로우
+    .feature(target: "LeaveTrace")
   ],
   testDependencies: []
 )

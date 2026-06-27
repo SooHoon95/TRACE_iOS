@@ -1,6 +1,7 @@
 import SwiftUI
 import UIComponent
 import Domain
+import Home
 import Collection
 import Identity
 import LeaveTrace
