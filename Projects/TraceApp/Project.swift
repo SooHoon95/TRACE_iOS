@@ -14,8 +14,6 @@ let project = Project.app(
     .infrastructure,
     .feature(target: "MainTab"),
     .feature(target: "Map"),
-    .feature(target: "Hunt"),
-    .feature(target: "Reveal"),
     .feature(target: "LeaveTrace"),
     .feature(target: "Collection"),
     .feature(target: "Identity"),

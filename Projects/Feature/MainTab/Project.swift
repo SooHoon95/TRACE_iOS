@@ -13,7 +13,11 @@ let project = Project.framework(
     .appFoundation,
     .uiComponent,
     .domain,
-    .router
+    .router,
+    // Tab roots hosted by the shell
+    .feature(target: "Collection"),
+    .feature(target: "Identity"),
+    .feature(target: "LeaveTrace")
   ],
   testDependencies: []
 )
