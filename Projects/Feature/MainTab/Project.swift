@@ -17,7 +17,8 @@ let project = Project.framework(
     // Tab roots hosted by the shell
     .feature(target: "Collection"),
     .feature(target: "Identity"),
-    .feature(target: "LeaveTrace")
+    .feature(target: "LeaveTrace"),
+    .feature(target: "Map")
   ],
   testDependencies: []
 )

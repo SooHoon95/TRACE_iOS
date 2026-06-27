@@ -15,6 +15,16 @@ public actor InMemoryTraceStore: PlaceRepository, MomentRepository {
     public init(seed: TraceSeed = .empty) {
         self.places = seed.places
         self.moments = seed.moments
+        // Denormalize each place's public aggregates so Home/Map lists render counts.
+        for i in places.indices {
+            let pid = places[i].id
+            let pub = moments
+                .filter { $0.placeID == pid && $0.isPublic }
+                .sorted { $0.createdAt > $1.createdAt }
+            places[i].momentCount = pub.count
+            places[i].contributorCount = Set(pub.map(\.authorID)).count
+            places[i].coverPhotoRef = pub.first?.photoRef
+        }
     }
 
     // MARK: - PlaceRepository

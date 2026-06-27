@@ -13,7 +13,8 @@ let project = Project.framework(
     .appFoundation,
     .uiComponent,
     .domain,
-    .router
+    .router,
+    .feature(target: "LeaveTrace")
   ],
   testDependencies: []
 )

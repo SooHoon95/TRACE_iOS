@@ -4,6 +4,7 @@ import Domain
 import Collection
 import Identity
 import LeaveTrace
+import Map
 
 /// App shell — the 5-tab root (홈·지도·＋남기기·도감·나).
 /// A single shared `TraceStore` + `User` are injected at the app root and threaded to every tab,
@@ -53,10 +54,10 @@ public struct MainTabFeatureView: View {
 
   @ViewBuilder private var content: some View {
     switch selection {
-    case "map":        MapPlaceholder()
+    case "map":        MapFeatureView(store: store, user: user)
     case "collection": CollectionFeatureView(store: store, userID: user.id)
     case "me":         IdentityFeatureView(user: user)
-    default:           HomePlaceholder()
+    default:           HomeView(store: store, user: user)
     }
   }
 }
@@ -88,46 +89,3 @@ private struct ClaimModal: View {
   }
 }
 
-// MARK: - Placeholders (홈 · 지도)
-
-/// 홈 — activity feed lands here later (ActivityFeedItem/PlacePromptCard). Branded empty state for now.
-private struct HomePlaceholder: View {
-  var body: some View {
-    VStack(spacing: 14) {
-      Spacer()
-      Text("TRACE").traceType(.displayLG).fontWeight(.heavy)
-        .foregroundStyle(TraceColor.textPrimary)
-      Text("오늘은 어디에 남길까?")
-        .traceType(.bodyLG).foregroundStyle(TraceColor.textSecondary)
-      Text("🔥 방금 남들이 남긴 순간 · 📍 내 주변 남길 자리")
-        .traceType(.bodySM).foregroundStyle(TraceColor.textMuted)
-      Text("홈 피드 준비 중")
-        .traceType(.eyebrow).foregroundStyle(TraceColor.accent)
-        .padding(.top, 6)
-      Spacer()
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(TraceColor.paper50)
-  }
-}
-
-/// 지도 — MapKit + PlacePin lands here later. Warm-dark themed placeholder.
-private struct MapPlaceholder: View {
-  var body: some View {
-    VStack(spacing: 14) {
-      Spacer()
-      Text("◉").font(.system(size: 40)).foregroundStyle(TraceColor.accentSoft)
-      Text("이 근처는 아직 비어있어")
-        .traceType(.bodyLG).fontWeight(.bold)
-        .foregroundStyle(TraceColor.textOnDark)
-      Text("첫 핀을 꽂아봐")
-        .traceType(.bodyMD).foregroundStyle(TraceColor.textOnDarkMuted)
-      Text("지도 준비 중")
-        .traceType(.eyebrow).foregroundStyle(TraceColor.accentSoft)
-        .padding(.top, 6)
-      Spacer()
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(TraceColor.surfaceDark)
-  }
-}
