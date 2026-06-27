@@ -1,0 +1,39 @@
+# Local/OCI stack: FastAPI + Postgres. On OCI, run `docker compose up -d` on an
+# Always-Free Arm (Ampere A1) instance. Photos persist in a named volume (or set
+# STORAGE_BACKEND=oci to use Object Storage).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: trace
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trace}
+      POSTGRES_DB: trace
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trace"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+asyncpg://trace:${POSTGRES_PASSWORD:-trace}@db:5432/trace
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-prod}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8000}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-com.efreedom.trace}
+      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - photos:/app/_photos
+
+volumes:
+  pgdata:
+  photos:

@@ -1,0 +1,13 @@
+# TRACE backend — FastAPI + SQLAlchemy(async). DB-agnostic: SQLite (local) / Postgres (OCI).
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlalchemy[asyncio]==2.0.36
+aiosqlite==0.20.0          # local dev driver
+asyncpg==0.30.0            # Postgres driver (OCI/prod)
+pydantic==2.10.4
+pydantic-settings==2.7.1
+PyJWT[crypto]==2.10.1      # our JWT + Apple id_token (JWKS) verification
+httpx==0.28.1             # Apple JWKS / Kakao userinfo fetch
+python-multipart==0.0.20  # multipart photo upload
+# Oracle OCI Object Storage — only needed when STORAGE_BACKEND=oci (imported lazily)
+# oci==2.137.0
