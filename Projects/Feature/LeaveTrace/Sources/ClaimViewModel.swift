@@ -3,7 +3,8 @@ import Domain
 import UIComponent
 
 /// Drives the claim loop for one place: load its exhibition, leave a moment, refresh.
-/// Depends only on the `TraceStore` protocol — the concrete store (mock now, Supabase later) is injected.
+/// Depends only on the `TraceStore` protocol — the concrete store (in-memory mock or the
+/// offline-first HTTP backend store) is injected.
 @MainActor
 public final class ClaimViewModel: ObservableObject {
     @Published public private(set) var exhibition: Exhibition?

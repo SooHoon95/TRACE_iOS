@@ -11,7 +11,6 @@ public extension TargetDependency {
 
   // MARK: - External (SPM via Tuist/Package.swift)
   static let keychainAccess: TargetDependency = .external(name: "KeychainAccess")
-  static let supabase: TargetDependency = .external(name: "Supabase")
 
   // MARK: - Local modules
   static let appFoundation: TargetDependency = .project(target: "AppFoundation", path: .relativeToRoot("Projects/AppFoundation"))

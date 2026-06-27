@@ -6,14 +6,15 @@
 //
 //   cp XCConfigs/Sensitive.xcconfig.example XCConfigs/Sensitive.xcconfig
 //
-// Then fill in local-only secrets below. NEVER commit real keys.
+// Then fill in local-only values below. NEVER commit real secrets.
 
 // DEVELOPMENT_TEAM =
 
-// ── Supabase (Phase 2 backend) ──
-// Leave these blank to run on the in-memory mock store.
-// ⚠️ xcconfig treats "//" as a comment, so put the HOST ONLY (no "https://").
-//    The app prepends https:// (see InfoPlists/TraceAppInfo.plist → SUPABASE_URL).
-//    From Supabase: Project Settings → API → Project URL (drop the https://) + anon public key.
-// SUPABASE_HOST = your-project-ref.supabase.co
-// SUPABASE_ANON_KEY = eyJhbGciOi...
+// ── TRACE backend API ──
+// Leave TRACE_API_HOST blank to run on the in-memory mock store.
+// ⚠️ xcconfig treats "//" as a comment, so put the HOST ONLY (no scheme).
+//    The app builds the URL as $(TRACE_API_SCHEME)://$(TRACE_API_HOST); scheme defaults
+//    to https (set in Trace.xcconfig). For a plain-HTTP local/IP test, also set
+//    TRACE_API_SCHEME = http here.
+// TRACE_API_HOST = api.yourdomain.com
+// TRACE_API_SCHEME = https

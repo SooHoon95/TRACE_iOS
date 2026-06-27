@@ -2,10 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>SUPABASE_URL</key>
-	<string>https://$(SUPABASE_HOST)</string>
-	<key>SUPABASE_ANON_KEY</key>
-	<string>$(SUPABASE_ANON_KEY)</string>
+	<key>TRACE_API_BASE_URL</key>
+	<string>$(TRACE_API_SCHEME)://$(TRACE_API_HOST)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>ko</string>
 	<key>CFBundleDisplayName</key>
@@ -36,9 +34,9 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>보물을 AR로 보고 현장 인증 사진을 찍어요</string>
+	<string>이 자리에 남길 순간을 사진으로 찍어요</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>주변 보물까지 거리를 알려줘요</string>
+	<string>지금 이 자리를 인증하고 주변 전시를 보여줘요</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>

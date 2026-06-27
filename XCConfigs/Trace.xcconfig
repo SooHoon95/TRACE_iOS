@@ -1,4 +1,7 @@
 #include "./MarketingVersion.xcconfig"
+
+// Backend API scheme default — Sensitive.xcconfig (included next) may override to http for local.
+TRACE_API_SCHEME = https
 #include "./Sensitive.xcconfig"
 
 CODE_SIGN_STYLE = Automatic
