@@ -6,16 +6,19 @@ import Identity
 import LeaveTrace
 
 /// App shell — the 5-tab root (홈·지도·＋남기기·도감·나).
-/// 도감/나 are real feature roots; 홈·지도 are branded placeholders for now.
-/// The center ＋ presents the 순간 남기기(claim) flow full-screen instead of switching tabs.
-///
-/// Note: each tab feature currently owns its own in-memory demo store, so data isn't shared
-/// across tabs yet — that arrives with the real composition root + auth (Phase 2).
+/// A single shared `TraceStore` + `User` are injected at the app root and threaded to every tab,
+/// so a moment left via ＋ shows up in 도감/전시 when you navigate there.
+/// 홈·지도 are branded placeholders for now. The center ＋ presents the 순간 남기기 flow full-screen.
 public struct MainTabFeatureView: View {
+  private let store: any TraceStore
+  private let user: User
   @State private var selection = "home"
   @State private var presentingClaim = false
 
-  public init() {}
+  public init(store: any TraceStore = Demo.store(), user: User = .demo) {
+    self.store = store
+    self.user = user
+  }
 
   private let tabs: [TraceTab] = [
     TraceTab(id: "home",       label: "홈",     icon: .exhibit),
@@ -32,10 +35,12 @@ public struct MainTabFeatureView: View {
       TraceTabBar(items: tabs, selection: tabSelection)
     }
     .background(TraceColor.paper50.ignoresSafeArea())
-    .fullScreenCover(isPresented: $presentingClaim) { ClaimModal() }
+    .fullScreenCover(isPresented: $presentingClaim) {
+      ClaimModal(store: store, user: user)
+    }
   }
 
-  /// The ＋ tab doesn't switch tabs — it presents the claim flow.
+  /// The ＋ tab doesn't switch tabs — it presents the claim flow against the shared store.
   private var tabSelection: Binding<String> {
     Binding(
       get: { selection },
@@ -49,22 +54,24 @@ public struct MainTabFeatureView: View {
   @ViewBuilder private var content: some View {
     switch selection {
     case "map":        MapPlaceholder()
-    case "collection": CollectionFeatureView()
-    case "me":         IdentityFeatureView()
+    case "collection": CollectionFeatureView(store: store, userID: user.id)
+    case "me":         IdentityFeatureView(user: user)
     default:           HomePlaceholder()
     }
   }
 }
 
-// MARK: - ＋ claim flow (full-screen)
+// MARK: - ＋ claim flow (full-screen, shared store)
 
-/// Hosts LeaveTrace's exhibition + claim flow with a 닫기 affordance.
+/// Hosts LeaveTrace's exhibition + claim flow against the shared store, with a 닫기 affordance.
 private struct ClaimModal: View {
+  let store: any TraceStore
+  let user: User
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     NavigationStack {
-      LeaveTraceFeatureView()
+      LeaveTraceFeatureView(store: store, user: user, place: Demo.seongsan)
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .top) {
           HStack {

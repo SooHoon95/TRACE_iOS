@@ -7,10 +7,8 @@ import Domain
 public struct LeaveTraceFeatureView: View {
     @StateObject private var vm: ClaimViewModel
 
-    public init() {
-        let store = InMemoryTraceStore(seed: DemoData.seed())
-        let user = User(nickname: "여행자", authProvider: .apple)
-        _vm = StateObject(wrappedValue: ClaimViewModel(store: store, user: user, place: DemoData.place))
+    public init(store: any TraceStore = Demo.store(), user: User = .demo, place: Place = Demo.seongsan) {
+        _vm = StateObject(wrappedValue: ClaimViewModel(store: store, user: user, place: place))
     }
 
     public var body: some View {

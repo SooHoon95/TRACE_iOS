@@ -3,7 +3,7 @@ import Domain
 import UIComponent
 
 /// Drives the claim loop for one place: load its exhibition, leave a moment, refresh.
-/// Depends only on Domain protocols; the concrete `InMemoryTraceStore` is injected.
+/// Depends only on the `TraceStore` protocol — the concrete store (mock now, Supabase later) is injected.
 @MainActor
 public final class ClaimViewModel: ObservableObject {
     @Published public private(set) var exhibition: Exhibition?
@@ -11,13 +11,13 @@ public final class ClaimViewModel: ObservableObject {
     /// Set briefly after a successful claim to drive the "합류" feedback.
     @Published public var justJoinedAt: Date?
 
-    private let store: InMemoryTraceStore
+    private let store: any TraceStore
     private let user: User
     private let placeCoordinate: Coordinate
     private let placeName: String
     private var placeID: UUID
 
-    public init(store: InMemoryTraceStore, user: User, place: Place) {
+    public init(store: any TraceStore, user: User, place: Place) {
         self.store = store
         self.user = user
         self.placeID = place.id

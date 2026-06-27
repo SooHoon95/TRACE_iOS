@@ -7,9 +7,8 @@ import Domain
 public struct CollectionFeatureView: View {
   @StateObject private var vm: CollectionViewModel
 
-  public init() {
-    _vm = StateObject(wrappedValue: CollectionViewModel(store: CollectionDemo.store(),
-                                                        userID: CollectionDemo.user.id))
+  public init(store: any TraceStore = Demo.store(), userID: UUID = User.demo.id) {
+    _vm = StateObject(wrappedValue: CollectionViewModel(store: store, userID: userID))
   }
 
   private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
