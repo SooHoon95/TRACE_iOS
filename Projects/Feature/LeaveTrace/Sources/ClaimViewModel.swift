@@ -10,6 +10,9 @@ public final class ClaimViewModel: ObservableObject {
     @Published public var isComposing = false
     /// Set briefly after a successful claim to drive the "합류" feedback.
     @Published public var justJoinedAt: Date?
+    @Published public private(set) var isLoading = false
+    /// Non-nil when a load or claim fails — drives the error view / banner.
+    @Published public var errorMessage: String?
 
     private let store: any TraceStore
     private let user: User
@@ -29,31 +32,46 @@ public final class ClaimViewModel: ObservableObject {
     public var contributorCount: Int { exhibition?.contributorCount ?? 0 }
 
     public func load() async {
-        exhibition = try? await store.exhibition(placeID: placeID)
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            exhibition = try await store.exhibition(placeID: placeID)
+            errorMessage = nil
+        } catch {
+            errorMessage = "전시를 불러오지 못했어요"
+        }
     }
 
     /// The core action: resolve the place (hybrid snap) and leave the moment, then refresh.
+    /// On failure the moment is NOT counted as joined — `errorMessage` is set instead.
     public func claim(_ draft: CaptureComposer.Draft) async {
-        guard let place = try? await store.resolveOrCreate(
-            at: placeCoordinate,
-            snapRadiusMeters: defaultSnapRadiusMeters,
-            suggestedName: placeName
-        ) else { return }
-        placeID = place.id
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let place = try await store.resolveOrCreate(
+                at: placeCoordinate,
+                snapRadiusMeters: defaultSnapRadiusMeters,
+                suggestedName: placeName
+            )
+            placeID = place.id
 
-        let moment = Moment(
-            placeID: place.id,
-            authorID: user.id,
-            photoRef: "user-\(UUID().uuidString).jpg",
-            caption: draft.caption,
-            companion: draft.companion,
-            vibe: draft.vibe,
-            coordinate: placeCoordinate,
-            visibility: draft.visibility
-        )
-        try? await store.leave(moment)
-        await load()
-        isComposing = false
-        justJoinedAt = Date()
+            let moment = Moment(
+                placeID: place.id,
+                authorID: user.id,
+                photoRef: "user-\(UUID().uuidString).jpg",
+                caption: draft.caption,
+                companion: draft.companion,
+                vibe: draft.vibe,
+                coordinate: placeCoordinate,
+                visibility: draft.visibility
+            )
+            try await store.leave(moment)
+            exhibition = try await store.exhibition(placeID: placeID)
+            isComposing = false
+            justJoinedAt = Date()        // only after a confirmed write
+            errorMessage = nil
+        } catch {
+            errorMessage = "남기지 못했어요. 다시 시도해줘"
+        }
     }
 }

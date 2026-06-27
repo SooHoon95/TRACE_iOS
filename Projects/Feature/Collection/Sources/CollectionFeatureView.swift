@@ -18,7 +18,11 @@ public struct CollectionFeatureView: View {
       VStack(alignment: .leading, spacing: 18) {
         header
         summaryBar
-        if vm.moments.isEmpty {
+        if vm.isLoading && !vm.didLoad {
+          TraceLoadingView().frame(height: 220)
+        } else if let msg = vm.errorMessage, vm.moments.isEmpty {
+          TraceErrorView(message: msg) { Task { await vm.load() } }.frame(height: 220)
+        } else if vm.moments.isEmpty {
           emptyState
         } else {
           LazyVGrid(columns: columns, spacing: 12) {

@@ -18,7 +18,12 @@ public struct PlaceExhibitionView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     header
-                    if let ex = vm.exhibition, !ex.isEmpty {
+                    if vm.exhibition == nil && vm.isLoading {
+                        TraceLoadingView().frame(height: 220)
+                    } else if vm.exhibition == nil, let msg = vm.errorMessage {
+                        TraceErrorView(message: msg) { Task { await vm.load() } }
+                            .frame(height: 220)
+                    } else if let ex = vm.exhibition, !ex.isEmpty {
                         LazyVGrid(columns: columns, spacing: 12) {
                             ForEach(ex.moments) { MomentGridCell(moment: $0) }
                         }
@@ -85,7 +90,15 @@ public struct PlaceExhibitionView: View {
 
     @ViewBuilder
     private var joinFeedback: some View {
-        if vm.justJoinedAt != nil {
+        if let msg = vm.errorMessage, vm.exhibition != nil {
+            TraceErrorBanner(msg)
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .task {
+                    try? await Task.sleep(nanoseconds: 2_500_000_000)
+                    withAnimation { vm.errorMessage = nil }
+                }
+        } else if vm.justJoinedAt != nil {
             Text("이 자리에 합류했어 ✨")
                 .traceType(.bodyMD)
                 .fontWeight(.semibold)

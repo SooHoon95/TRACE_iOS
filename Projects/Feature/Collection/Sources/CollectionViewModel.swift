@@ -6,6 +6,10 @@ import Domain
 public final class CollectionViewModel: ObservableObject {
     @Published public private(set) var moments: [Moment] = []
     @Published public private(set) var placeCount: Int = 0
+    @Published public private(set) var isLoading = false
+    @Published public var errorMessage: String?
+    /// True only after a successful load with no moments (vs. not-yet-loaded).
+    @Published public private(set) var didLoad = false
 
     private let store: any TraceStore
     private let userID: UUID
@@ -16,7 +20,16 @@ public final class CollectionViewModel: ObservableObject {
     }
 
     public func load() async {
-        moments = (try? await store.mine(authorID: userID)) ?? []
-        placeCount = Set(moments.map(\.placeID)).count
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let mine = try await store.mine(authorID: userID)
+            moments = mine
+            placeCount = Set(mine.map(\.placeID)).count
+            errorMessage = nil
+            didLoad = true
+        } catch {
+            errorMessage = "도감을 불러오지 못했어요"
+        }
     }
 }
