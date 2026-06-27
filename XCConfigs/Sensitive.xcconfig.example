@@ -1,0 +1,19 @@
+// Sensitive.xcconfig.example — COMMITTED TEMPLATE
+//
+// The real file (XCConfigs/Sensitive.xcconfig) is git-ignored and lives only on your machine.
+// Other xcconfigs reference it by relative path, so the real file MUST exist before
+// `tuist generate`. Create it from this template:
+//
+//   cp XCConfigs/Sensitive.xcconfig.example XCConfigs/Sensitive.xcconfig
+//
+// Then fill in local-only secrets below. NEVER commit real keys.
+
+// DEVELOPMENT_TEAM =
+
+// ── Supabase (Phase 2 backend) ──
+// Leave these blank to run on the in-memory mock store.
+// ⚠️ xcconfig treats "//" as a comment, so put the HOST ONLY (no "https://").
+//    The app prepends https:// (see InfoPlists/TraceAppInfo.plist → SUPABASE_URL).
+//    From Supabase: Project Settings → API → Project URL (drop the https://) + anon public key.
+// SUPABASE_HOST = your-project-ref.supabase.co
+// SUPABASE_ANON_KEY = eyJhbGciOi...

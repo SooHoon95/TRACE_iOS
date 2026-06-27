@@ -12,7 +12,8 @@ let project = Project.framework(
   dependencies: [
     .appFoundation,
     .domain,
-    .keychainAccess
+    .keychainAccess,
+    .supabase
   ],
   testDependencies: [
 

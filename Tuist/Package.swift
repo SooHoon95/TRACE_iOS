@@ -11,9 +11,15 @@ import ProjectDescriptionHelpers
 
 let packageSettings = PackageSettings(
   productTypes: [
-    "KeychainAccess": .framework
-    // Phase 2 backend products go here, e.g.:
-    // "Supabase": .framework, "Auth": .framework, "PostgREST": .framework, "Storage": .framework
+    "KeychainAccess": .framework,
+    // Supabase backend (auth + Postgres + Storage)
+    "Supabase": .framework,
+    "Auth": .framework,
+    "PostgREST": .framework,
+    "Storage": .framework,
+    "Realtime": .framework,
+    "Functions": .framework,
+    "Helpers": .framework
   ],
   baseSettings: .settings(configurations: Configuration.frameworkConfigure())
 )
@@ -23,9 +29,8 @@ let package = Package(
   name: "TracePackages",
   dependencies: [
     // Secure token/credential storage (used by Infrastructure; needed for Phase 2 auth sessions).
-    .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "4.2.2")
-
-    // ── Phase 2 backend — add the same way, then wire `.external(...)` constants ──
-    // .package(url: "https://github.com/supabase/supabase-swift.git", from: "2.0.0"),
+    .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "4.2.2"),
+    // Backend: auth + Postgres + Storage. Confined to Infrastructure (clean-arch).
+    .package(url: "https://github.com/supabase/supabase-swift.git", from: "2.0.0")
   ]
 )
