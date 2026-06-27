@@ -1,0 +1,23 @@
+//
+//  ProjectDefine.swift
+//  TraceManifests
+//
+//  Created by 송하민 on 7/11/24.
+//
+
+import ProjectDescription
+
+public extension Project {
+  
+  // MARK: - project manifests
+  
+  static let appName: String = "TRACE"
+  static let productName: String = "TRACE"
+  static let bundleId = "com.efreedom.trace"
+  static let deploymentTarget: DeploymentTargets = .iOS("17.0")
+  
+  // MARK: - read file path
+  
+  static let commonEntitlement: Entitlements = .file(path: Path.entitlementPath("App"))
+  
+}

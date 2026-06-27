@@ -1,0 +1,33 @@
+//
+//  TraceErrorDefine.swift
+//  AppFoundation
+//
+
+import Foundation
+
+public enum TraceErrorDefine: Int {
+
+  // MARK: - Common
+
+  /// 알 수 없는 에러
+  case unknown = 1000
+  /// 온라인이 아님
+  case failToConnectInternet
+  /// 정상 server status code가 아님
+  case failToStatusCodes
+  /// Data를 JSON으로 파싱하지 못함
+  case failToDeserializedDataToJSON
+  /// 최상단 뷰를 찾을 수 없음
+  case failToLoadTopWindow
+  /// 유저 정보를 찾을 수 없음
+  case notFoundUser
+  /// 디바이스 정보를 찾을 수 없음
+  case notFoundDeviceUUID
+
+  // MARK: - Map
+
+  /// 알 수 없는 위치권한 상태
+  case unknownLocationAuthenticationStatus = 2000
+  /// 사용자 위치정보 없음
+  case failToGetUserLocationCoordinate
+}

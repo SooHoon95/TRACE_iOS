@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrewReel (크루릴) — 협업 여행영화 × 영토게임</title>
+<meta name="description" content="여행이 한 편의 영화가 되고, 다닌 곳이 우리 크루의 영토가 된다. 셋로그 + KYRO 융합 여행 소셜 서비스.">
+<meta property="og:title" content="CrewReel (크루릴)">
+<meta property="og:description" content="여행이 한 편의 영화가 되고, 다닌 곳이 우리 크루의 영토가 된다.">
+<style>
+  :root{
+    --bg:#0a0e1a; --bg2:#0e1a2b; --card:#121d30; --line:rgba(255,255,255,.1);
+    --txt:#e7eef7; --dim:#9fb0c3; --accent:#8e2de2; --accent2:#4a00e0;
+    --c1:#36d1dc; --c2:#fc466b; --c3:#38ef7d; --gold:#ffd200;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    background:var(--bg); color:var(--txt); line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:0 20px}
+  section{padding:54px 0; border-bottom:1px solid var(--line)}
+  h2{font-size:24px; margin-bottom:6px; letter-spacing:-.3px}
+  h3{font-size:17px; margin-bottom:6px}
+  .label{font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--dim); font-weight:700; margin-bottom:14px}
+  .dim{color:var(--dim)}
+  .sub{color:var(--dim); font-size:14.5px}
+
+  /* HERO */
+  .hero{
+    text-align:center; padding:80px 20px 70px;
+    background:
+      radial-gradient(1100px 380px at 50% -60px, rgba(142,45,226,.35), transparent 70%),
+      linear-gradient(160deg,#0c1326,#0a0e1a);
+    border-bottom:1px solid var(--line);
+  }
+  .badge{display:inline-block; font-size:12px; padding:5px 12px; border:1px solid var(--line); border-radius:999px; color:var(--dim); margin-bottom:22px}
+  .logo{font-size:clamp(40px,9vw,68px); font-weight:800; letter-spacing:-1.5px; line-height:1.05;
+    background:linear-gradient(120deg,#fff, #c9b8ff 60%, var(--c1)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .logo small{display:block; font-size:17px; font-weight:600; letter-spacing:0; color:var(--dim); margin-top:10px}
+  .tag{font-size:clamp(18px,4.4vw,26px); font-weight:700; margin:26px auto 0; max-width:620px; letter-spacing:-.4px}
+  .tag b{background:linear-gradient(120deg,var(--c2),var(--accent)); -webkit-background-clip:text; background-clip:text; color:transparent}
+
+  /* flow */
+  .flow{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
+  .flow .step{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 14px; text-align:center}
+  .flow .ico{font-size:30px}
+  .flow .k{font-size:13px; color:var(--dim); margin:6px 0 4px; font-weight:700}
+  .flow .step p{font-size:13px; color:var(--dim)}
+  .arrow{text-align:center; color:var(--dim); font-size:14px; margin:8px 0 0}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px}
+  .card .ico{font-size:26px; margin-bottom:8px}
+  .card p{font-size:13.5px; color:var(--dim); margin-top:4px}
+
+  ol.steps{list-style:none; counter-reset:s; display:flex; flex-direction:column; gap:10px}
+  ol.steps li{counter-increment:s; position:relative; padding:14px 16px 14px 50px; background:var(--card); border:1px solid var(--line); border-radius:12px; font-size:14px}
+  ol.steps li::before{content:counter(s); position:absolute; left:14px; top:13px; width:24px; height:24px; border-radius:50%;
+    background:linear-gradient(135deg,var(--c2),#c31432); color:#fff; font-size:13px; font-weight:700; display:grid; place-items:center}
+
+  table{width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; overflow:hidden; border-radius:12px}
+  th,td{padding:10px 12px; text-align:left; border-bottom:1px solid var(--line)}
+  thead th{background:rgba(255,255,255,.04); color:var(--dim); font-size:12px; text-transform:uppercase; letter-spacing:.5px}
+  tbody tr:last-child td{border-bottom:none}
+  .me{background:rgba(142,45,226,.14)}
+  .ck{color:var(--c3); font-weight:700}.x{color:#ff6b81}.tr{color:var(--gold)}
+
+  .highlight{background:linear-gradient(135deg,rgba(142,45,226,.18),rgba(74,0,224,.12)); border:1px solid rgba(142,45,226,.45); border-radius:16px; padding:26px; text-align:center}
+  .highlight h2{margin-bottom:10px}
+  .highlight p{font-size:15px}
+
+  footer{padding:40px 20px 70px; text-align:center; color:var(--dim); font-size:13px}
+
+  @media(max-width:640px){
+    .flow{grid-template-columns:1fr} .grid2,.grid3{grid-template-columns:1fr}
+    .arrow{transform:rotate(90deg)}
+    section{padding:42px 0}
+    table{font-size:12px} th,td{padding:8px}
+  }
+</style>
+</head>
+<body>
+
+  <header class="hero">
+    <div class="badge">가제 · Working title</div>
+    <div class="logo">CrewReel<small>크루릴</small></div>
+    <p class="tag">여행이 한 편의 <b>영화</b>가 되고,<br>다닌 곳이 우리 크루의 <b>영토</b>가 된다.</p>
+  </header>
+
+  <div class="wrap">
+
+    <section>
+      <p class="label">한 줄 컨셉</p>
+      <p style="font-size:16px">여행 크루가 <b>알림 뜰 때마다 2~4초씩 찍으면</b> → 한 편의 <b>여행 영화가 자동 완성</b>되고, <b>찍은 장소는 지도에 크루 영토로 점령</b>되어 다른 크루와 뺏고 뺏긴다. 장소·순간·크루는 카드로 수집·연결.</p>
+      <p class="sub" style="margin-top:14px">셋로그(SETLOG)의 <b style="color:var(--c1)">동시참여 자동영상</b> 엔진 + KYRO의 <b style="color:var(--c2)">영토 게임화·비즈니스</b> 메커니즘을, 아무도 안 건드린 <b>'여행'</b>이라는 교집합에 융합.</p>
+    </section>
+
+    <section>
+      <p class="label">어떻게 작동하나 — A · B · C</p>
+      <div class="flow">
+        <div class="step"><div class="ico">⏰</div><div class="k">A. 어떻게 찍나</div><p>동시 알림 → 그 순간 다같이 2~4초 (초저마찰)</p></div>
+        <div class="step"><div class="ico">🎬</div><div class="k">C. 뭐가 나오나</div><p>클립 자동 합성 → 우리 크루 여행 영화 한 편</p></div>
+        <div class="step"><div class="ico">🗺️</div><div class="k">B. 누구랑 쌓이나</div><p>찍은 곳=영토 + 장소·크루 카드 수집·연결</p></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">⚔️ 영토 메커니즘 — 점령 & 빼앗기</p>
+      <ol class="steps">
+        <li>크루가 장소에서 영상을 찍으면 그 구역이 <b>크루 색으로 점령</b></li>
+        <li>다른 크루가 같은 곳에서 <b>더 좋은(조회수·완성도) 영상</b>을 올리면 <b>영토 빼앗김</b></li>
+        <li>뺏기면 알림 → 지키러/더 잘 찍으러 <b>재방문</b> (손실회피)</li>
+        <li>여행 끝: 점령한 제주 지도 한눈에 + <b>크루 랭킹</b></li>
+      </ol>
+      <p class="sub" style="margin-top:12px">※ 속도·주행 경쟁은 <b>배제</b>(안전). 영토는 '어디서 찍었나'로만 결정.</p>
+    </section>
+
+    <section>
+      <p class="label">🧠 심리·메커니즘 매핑</p>
+      <table>
+        <thead><tr><th>심리 레버</th><th>출처</th><th>우리 적용</th></tr></thead>
+        <tbody>
+          <tr><td>소유·손실회피</td><td>KYRO</td><td>찍은 장소=영토, 더 좋은 영상이면 뺏김→재방문</td></tr>
+          <tr><td>가시적 성취</td><td>KYRO</td><td>여행할수록 지도가 우리 영상으로 채워짐</td></tr>
+          <tr><td>크루 경쟁</td><td>KYRO</td><td>크루 vs 크루 랭킹</td></tr>
+          <tr><td>동시성·FOMO</td><td>셋로그</td><td>알림 → 그 순간 다같이 촬영</td></tr>
+          <tr><td>초저마찰</td><td>셋로그</td><td>편집 0, 찍기만</td></tr>
+          <tr><td>자동 보상</td><td>셋로그</td><td>클립이 알아서 여행 영화로</td></tr>
+          <tr><td>수집·소속·연결</td><td>도감·클럽</td><td>장소·순간·크루 카드 수집 + 연결</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <p class="label">💰 비즈니스 모델 — KYRO식 B2B2C</p>
+      <div class="grid3">
+        <div class="card"><div class="ico">🎯</div><h3>장소·브랜드 챌린지</h3><p>카페·명소가 "여기서 크루 영상 찍으면 리워드" 후원. 방문·노출 ↔ 리워드 ↔ 수수료.</p></div>
+        <div class="card"><div class="ico">🏝️</div><h3>관광 협업</h3><p>제주관광공사·지자체, 숙소·바이크렌탈 제휴로 지역 관광 활성화.</p></div>
+        <div class="card"><div class="ico">⭐</div><h3>프리미엄</h3><p>고급 자동편집 템플릿·고화질·영상 장기보관·크루 커스텀.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">차별화 — white space</p>
+      <table>
+        <thead><tr><th>　</th><th>자동 여행영화</th><th>영토 게임</th><th>그룹 참여</th><th>여행 특화</th></tr></thead>
+        <tbody>
+          <tr><td>셋로그</td><td class="ck">○</td><td class="x">✕</td><td class="ck">○</td><td class="x">✕</td></tr>
+          <tr><td>KYRO</td><td class="x">✕</td><td class="ck">○</td><td class="tr">△</td><td class="x">✕</td></tr>
+          <tr><td>인스타·릴스</td><td class="tr">△</td><td class="x">✕</td><td class="x">✕</td><td class="x">✕</td></tr>
+          <tr><td>여행 기록앱</td><td class="x">✕</td><td class="x">✕</td><td class="tr">△</td><td class="ck">○</td></tr>
+          <tr class="me"><td><b>CrewReel</b></td><td class="ck">○</td><td class="ck">○</td><td class="ck">○</td><td class="ck">○</td></tr>
+        </tbody>
+      </table>
+      <p class="sub" style="margin-top:12px">네 칸을 다 채우는 건 크루릴뿐. 셋로그도 KYRO도 각각만 한다.</p>
+    </section>
+
+    <section style="border-bottom:none">
+      <div class="highlight">
+        <h2>✨ 진짜 새로운 지점</h2>
+        <p>"협업 여행 영화 + 영토 게임 + 브랜드 챌린지"를 <b>한 데 묶은 건 아무도 안 한다.</b><br>두 검증된 심리 엔진을 합쳐, 여행에 꽂는다.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    🏍️ 제주 바이크 여행 프로젝트 · 브레인스토밍 산출물<br>
+    레퍼런스: 셋로그(SETLOG) · KYRO &nbsp;|&nbsp; 2026
+  </footer>
+
+</body>
+</html>

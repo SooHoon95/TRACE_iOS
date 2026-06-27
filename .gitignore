@@ -1,0 +1,29 @@
+.DS_Store
+.build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# Tuist generated
+*.xcodeproj
+*.xcworkspace
+**/Derived/
+Tuist/.build/
+.tuist-cache/
+
+# Large vendored tool binaries
+Tools/swiftlint
+Tools/swiftgen
+
+# Design import (working source, not committed)
+.design-import-v2/
+
+# ── Local-only secrets (managed OUTSIDE git) ──
+# Real keys live here locally. Recreate from the template:
+#   cp XCConfigs/Sensitive.xcconfig.example XCConfigs/Sensitive.xcconfig
+XCConfigs/Sensitive.xcconfig
+
+# ── Agent / tooling working state (local only — may contain transcripts) ──
+.omc/
+.superpowers/
+.claude/

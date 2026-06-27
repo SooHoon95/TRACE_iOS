@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRACE (트레이스) — 다닌 만큼, 내가 된다</title>
+<meta name="description" content="여행지에서 경험 카드를 수집하면 자동으로 나만의 여행 정체성·지도로 합성되어 평생 쌓이고 자랑할 수 있는 개인 여행 도감 게임.">
+<meta property="og:title" content="TRACE (트레이스)">
+<meta property="og:description" content="다닌 만큼, 내가 된다 — 경험 수집이 나만의 여행 정체성이 되는 도감 게임">
+<style>
+  :root{
+    --bg:#0a0f14; --card:#121b24; --line:rgba(255,255,255,.1);
+    --txt:#e9f1f7; --dim:#9bb0c0;
+    --c1:#2dd4bf; --c2:#fb923c; --c3:#a78bfa; --p:#22d3ee; --gold:#fbbf24;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px}
+  section{padding:50px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:23px;margin-bottom:8px;letter-spacing:-.3px}
+  h3{font-size:16px;margin-bottom:4px}
+  .label{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);font-weight:700;margin-bottom:14px}
+  .sub{color:var(--dim);font-size:14.5px}
+  .dim{color:var(--dim)}
+  b.hl{background:linear-gradient(120deg,var(--c1),var(--p));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  .hero{text-align:center;padding:80px 20px 64px;background:radial-gradient(1000px 380px at 50% -40px,rgba(45,212,191,.28),transparent 70%),linear-gradient(160deg,#0c1620,#0a0f14);border-bottom:1px solid var(--line)}
+  .verified{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 13px;border:1px solid rgba(45,212,191,.4);background:rgba(45,212,191,.1);color:#8af0e2;border-radius:999px;margin-bottom:22px}
+  .logo{font-size:clamp(46px,11vw,84px);font-weight:800;letter-spacing:2px;line-height:1;background:linear-gradient(120deg,#fff,#bff7ee 50%,var(--c1));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .logo small{display:block;font-size:14px;font-weight:600;letter-spacing:4px;color:var(--dim);margin-top:14px}
+  .tag{font-size:clamp(19px,4.6vw,27px);font-weight:700;margin:22px auto 0;max-width:620px;letter-spacing:-.4px}
+  .tag b{background:linear-gradient(120deg,var(--c2),var(--c3));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  .loop{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;font-size:12.5px}
+  .loop .n{flex:1;min-width:104px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;text-align:center}
+  .loop .n .i{font-size:23px}
+  .loop .n b{display:block;margin-top:5px;font-size:13px}
+  .loop .n p{color:var(--dim);font-size:11.5px;margin-top:3px}
+  .loop .arrow{display:flex;align-items:center;color:var(--dim);font-size:15px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card .i{font-size:25px;margin-bottom:7px}
+  .card p{font-size:13.5px;color:var(--dim);margin-top:3px}
+
+  .pillar{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;position:relative;overflow:hidden}
+  .pillar .num{position:absolute;top:-10px;right:6px;font-size:74px;font-weight:800;color:rgba(255,255,255,.04)}
+  .pillar h3{font-size:17px}
+  .pillar p{font-size:13.5px;color:var(--dim);margin-top:8px}
+  .chip{display:inline-block;font-size:11.5px;padding:3px 9px;border-radius:999px;background:rgba(167,139,250,.14);color:#cbb8ff;margin:8px 5px 0 0}
+
+  ol.steps{list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:9px}
+  ol.steps li{counter-increment:s;position:relative;padding:13px 16px 13px 48px;background:var(--card);border:1px solid var(--line);border-radius:12px;font-size:13.5px}
+  ol.steps li::before{content:counter(s);position:absolute;left:13px;top:12px;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--c1),var(--p));color:#04201c;font-size:12px;font-weight:800;display:grid;place-items:center}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:rgba(255,255,255,.04);color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  tbody tr:last-child td{border-bottom:none}
+  .me{background:rgba(45,212,191,.12)}
+  .ck{color:var(--c1);font-weight:700}.x{color:#ff6b81}.tr{color:var(--gold)}
+
+  .flag{border-left:3px solid var(--c2);background:rgba(251,146,60,.08);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13px;margin-top:12px}
+  .data{border-left:3px solid var(--c1);background:rgba(45,212,191,.07);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13px;margin-top:12px}
+  .highlight{background:linear-gradient(135deg,rgba(45,212,191,.16),rgba(34,211,238,.08));border:1px solid rgba(45,212,191,.4);border-radius:16px;padding:24px;text-align:center}
+  .kv{display:flex;gap:10px;font-size:13.5px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .kv:last-child{border-bottom:none}
+  .kv b{min-width:96px;color:var(--c1)}
+  footer{padding:38px 20px 66px;text-align:center;color:var(--dim);font-size:13px}
+
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}section{padding:38px 0}table{font-size:12px}th,td{padding:8px}.loop .arrow{display:none}}
+</style>
+</head>
+<body>
+
+  <header class="hero">
+    <div class="verified">✓ deep-interview(모호함 15.4%) → ralplan(architect·critic) → ralph 검증 완료</div>
+    <div class="logo">TRACE<small>T R A C E</small></div>
+    <p class="tag">다닌 만큼, <b>내가 된다.</b></p>
+  </header>
+
+  <div class="wrap">
+
+    <section>
+      <p class="label">한 줄 컨셉</p>
+      <p style="font-size:16px">여행지(그리고 동네)에서 <b class="hl">경험 카드</b>를 수집하면, 그게 자동으로 <b class="hl">나만의 여행 정체성·지도</b>로 합성되어 — 평생 쌓이고(D), 남들과 다르게 자랑할 수 있는(A) <b>개인 여행 도감 게임.</b></p>
+      <p class="sub" style="margin-top:12px">KYRO의 <b style="color:var(--c1)">수집·진행 쾌감</b> + Spotify Wrapped의 <b style="color:var(--c3)">자랑 포맷</b> + 셋로그의 <b style="color:var(--c2)">인증 감성</b>을, <b>영역전(밀도 의존) 없이 개인 베이스</b>로.</p>
+    </section>
+
+    <section>
+      <p class="label">🎯 문제 정의 (problem-first · 데이터 검증)</p>
+      <div class="grid2">
+        <div class="card"><h3>고객</h3><p>2030 — 자주 다니고, SNS 인증 적극적, 뻔한 코스보다 능동 체험을 찾는 여행자</p></div>
+        <div class="card"><h3>PAIN</h3><p>"내 여행이 남들과 똑같고(A), 끝나면 사진뿐 안 남는다(D)"</p></div>
+      </div>
+      <div class="data">📊 경험&gt;물건 <b>58%</b> · 독특·모험 경험 우선 <b>68%</b> · 여행 후 SNS 기록·공유 <b>10명 중 7명</b> · "SNS에서 본 것만 예약" <b>39%</b>(Y·Z) · "나만의 취향 담긴 여행 선호"(한국관광공사)</div>
+      <p class="sub" style="margin-top:12px"><b>핵심 인사이트:</b> 이미 7/10이 SNS에 올리는 행동(A)이, 피드에 묻혀 휘발되는 게 D. → 표면(A)을 채우며 그 밑(D)을 같이 푸는 <b>빈 공간.</b></p>
+    </section>
+
+    <section>
+      <p class="label">🔁 코어 루프</p>
+      <div class="loop">
+        <div class="n"><div class="i">🧭</div><b>발견</b><p>주변 경험 카드</p></div>
+        <div class="arrow">→</div>
+        <div class="n"><div class="i">📸</div><b>수행</b><p>가서·하고·인증</p></div>
+        <div class="arrow">→</div>
+        <div class="n"><div class="i">🃏</div><b>획득</b><p>희귀도별 도감</p></div>
+        <div class="arrow">→</div>
+        <div class="n"><div class="i">✨</div><b>합성</b><p>여행 정체성 진화</p></div>
+        <div class="arrow">→</div>
+        <div class="n"><div class="i">📣</div><b>자랑</b><p>SNS·친구 공유</p></div>
+        <div class="arrow">→</div>
+        <div class="n"><div class="i">➕</div><b>기여</b><p>내 경험을 카드로</p></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">🏛️ 두 기둥</p>
+      <div class="grid2">
+        <div class="pillar"><div class="num">①</div>
+          <h3>경험 카드 (컬렉터블)</h3>
+          <p>장소가 아니라 <b>경험/순간</b>이 단위. 「한라산 일출」「해녀 만나기」「숨은 로컬식당」 = 희귀도 있는 카드. 같은 카페에서도 여러 장.</p>
+          <span class="chip">능동 체험 유도</span><span class="chip">희귀도</span><span class="chip">덱 = 나의 취향</span>
+        </div>
+        <div class="pillar"><div class="num">②</div>
+          <h3>자동 여행 정체성 (Wrapped)</h3>
+          <p>모은 카드가 합쳐져 <b>「산&lt;바다·도시형·새벽 탐험가」</b> 같은 시각적 여행 지문으로 자동 진화. 한 장으로 자랑(A) + 평생 누적(D).</p>
+          <span class="chip">레이더 차트</span><span class="chip">칭호</span><span class="chip">발자취 지도</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">✨ 정체성 합성 — 어떻게 (AI 없이, 집계로)</p>
+      <ol class="steps">
+        <li><b>취향 그래프</b> — 카드 카테고리(자연·맛집·액티비티·문화·카페…)별 보유 비율 → <b>레이더 차트</b> (집계 쿼리)</li>
+        <li><b>칭호</b> — 임계값 배지 테이블: "카페 10개 = 카페 헌터", "일출 5회 = 새벽 사냥꾼"</li>
+        <li><b>발자취 지도</b> — 수집 카드 GPS를 핀·히트맵으로 (MapKit, 클라이언트 렌더)</li>
+        <li><b>희귀도</b> — "100명 중 N명만 보유" 상대 희귀도 → 수집 욕구 + 자랑 욕구 동시 자극</li>
+      </ol>
+      <div class="flag">⚠️ 검증 지적: "합성"이 밋밋하면 Wrapped가 아니라 통계 대시보드. → <b>공유 비주얼 퀄리티를 최우선 투자</b>(바이럴 = 1차 방어벽). "진화(시간축 비교)"는 P1.</div>
+    </section>
+
+    <section>
+      <p class="label">🌗 일상 + 여행, 둘 다 작동 (리텐션 핵심)</p>
+      <p class="sub" style="margin-bottom:12px">개인 수집은 밀도 없이도 동네에서 굴러간다(영역전과 결정적 차이). 그래서 "여행 안 가는 345일"에도 죽지 않음.</p>
+      <div class="grid3">
+        <div class="card"><div class="i">🏙️</div><h3>일상 모드</h3><p>동네에서도 경험 카드 발견·수집</p></div>
+        <div class="card"><div class="i">💖</div><h3>위시리스트</h3><p>가고픈 카드 찜 → 근처 가면 알림</p></div>
+        <div class="card"><div class="i">📆</div><h3>월간 미니 리캡</h3><p>정체성 변화 푸시로 재방문 트리거</p></div>
+      </div>
+      <div class="flag">⚠️ Critic이 꼽은 <b>최대 결함</b>("여행 밖 죽은 앱")을 일상 모드로 해소. 데이터는 클라우드 백업·기기이전(P0) — "평생 누적" 약속 보증.</div>
+    </section>
+
+    <section>
+      <p class="label">🌱 콘텐츠 공급 — 운영 시딩 → UGC</p>
+      <div class="grid3">
+        <div class="card"><div class="i">🌰</div><h3>운영 시딩</h3><p>핫플 구역 반경 2km에 최소 30장·카테고리 5개+ (cold-start)</p></div>
+        <div class="card"><div class="i">👥</div><h3>UGC 확장</h3><p>유저가 자기 경험을 카드로 등록 → 남이 수집 (무한 확장 + 약한 연결)</p></div>
+        <div class="card"><div class="i">🤖</div><h3>AI 보조</h3><p>중복 정리·추천·부적절 콘텐츠 1차 필터</p></div>
+      </div>
+      <div class="flag">⚠️ UGC 방어(P0): 등록 시 카메라+GPS 강제 · 신고 + AI 부적절콘텐츠 필터(앱스토어 리젝 방지). 전환 인센티브: "내 카드 N명이 수집" 카운터 + 창작자 배지.</div>
+    </section>
+
+    <section>
+      <p class="label">차별화 — white space</p>
+      <table>
+        <thead><tr><th>　</th><th>경험 컬렉터블</th><th>자동 정체성</th><th>영구 누적</th><th>능동 게임</th></tr></thead>
+        <tbody>
+          <tr><td>스탬프투어(70+지자체)</td><td class="x">✕ 장소도장</td><td class="x">✕</td><td class="tr">△</td><td class="tr">△ 보상형</td></tr>
+          <tr><td>인스타</td><td class="x">✕</td><td class="x">✕</td><td class="x">✕ 휘발</td><td class="x">✕</td></tr>
+          <tr><td>트리플·맵리뷰</td><td class="x">✕</td><td class="x">✕</td><td class="tr">△</td><td class="x">✕</td></tr>
+          <tr class="me"><td><b>TRACE</b></td><td class="ck">○</td><td class="ck">○</td><td class="ck">○</td><td class="ck">○</td></tr>
+        </tbody>
+      </table>
+      <p class="sub" style="margin-top:10px">방어벽: 1차=공유 비주얼 바이럴 · 2차=콘텐츠 누적 · 3차=P1 UGC 네트워크효과.</p>
+    </section>
+
+    <section>
+      <p class="label">💰 수익모델 — B2B2C (P1)</p>
+      <p style="font-size:15px">가게·브랜드가 <b class="hl">스폰서 경험 카드</b>를 발행 (카페 "시그니처 음료 미션" → 방문 유도·리워드). KYRO 브랜드 챌린지의 카드판.</p>
+      <div class="flag">⚠️ 진정성 보호: 스폰서 카드는 정체성 집계에서 분리 표시 + 비율 상한 + "현장 경험 기반" 품질 기준. 검증 기준 = 잠재 스폰서 <b>LOI 1건</b>(개념정의 아님).</div>
+    </section>
+
+    <section>
+      <p class="label">🔥 런치 전략</p>
+      <div class="grid3">
+        <div class="card"><div class="i">🎓</div><h3>핫플 한 구역 집중</h3><p>대학가 등 밀집 시딩(전국 분산 X)</p></div>
+        <div class="card"><div class="i">📲</div><h3>온보딩 첫 카드</h3><p>설치 즉시 "첫 발자국" 자동 부여 + 근처 3장 하이라이트</p></div>
+        <div class="card"><div class="i">🏍️</div><h3>제주 = 첫 원정</h3><p>바이크 여행을 PoC·첫 원정 이벤트로</p></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">📊 성공기준 (MVP · 정량 가설검증)</p>
+      <div class="grid2">
+        <div class="card"><div class="i">🃏</div><h3>H1 · 수집이 재밌나</h3><p>여행 1회당 카드 수집 수 · 세션당 수집률</p></div>
+        <div class="card"><div class="i">📣</div><h3>H2 · 공유가치</h3><p>정체성 공유율 ≥ 25% · 공유→유입 바이럴계수 K</p></div>
+        <div class="card"><div class="i">🔁</div><h3>H3 · 재방문</h3><p>2회차 여행 재사용 ≥ 40% · D7 ≥ 30%(일상모드 D30 추적)</p></div>
+        <div class="card"><div class="i">🤝</div><h3>BM 신호</h3><p>잠재 스폰서 LOI 1건 · 퍼널 전환율 측정</p></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">🧩 MVP 범위 (YAGNI)</p>
+      <div class="kv"><b>✅ P0</b><span>경험카드 수집(운영시드)·현장인증·온보딩 첫카드·정체성 합성(기본)·도감·공유·일상모드·클라우드 백업</span></div>
+      <div class="kv"><b>⏳ P1</b><span>UGC 카드 등록·스폰서 카드·정체성 "진화"(시간축)·동적 희귀도·위시리스트 알림</span></div>
+      <div class="kv"><b>🔮 P2</b><span>경쟁·그룹 레이어(도입 시 위치검증 강화)·AI 추천 고도화</span></div>
+    </section>
+
+    <section style="border-bottom:none">
+      <div class="highlight">
+        <h2>✨ 진짜 새로운 지점</h2>
+        <p>"경험 컬렉터블 + 자동 여행 정체성 합성 + 영구 누적"을 한 데 묶은 건 아무도 안 한다.<br>스탬프투어의 포화를 <b>경험 카드 × Wrapped식 정체성</b>으로 비껴가고, 밀도·영상·콘텐츠 리스크를 <b>개인 베이스</b>로 우회한다.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    🏍️ 제주 여행 프로젝트 · TRACE 기획 산출물<br>
+    deep-interview → ralplan(architect·critic) → ralph 검증 · 필수수정 10건 반영 · 2026
+  </footer>
+
+</body>
+</html>

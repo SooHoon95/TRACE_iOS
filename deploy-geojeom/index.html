@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>거점 (HOLD) — 위치 기반 크루 영역전</title>
+<meta name="description" content="크루가 실제 장소를 현장 사진+투표로 점령하고, 점령은 시간이 지나면 감쇠되는 위치 기반 영역전.">
+<meta property="og:title" content="거점 (HOLD)">
+<meta property="og:description" content="다닌 곳이 우리 크루의 영토가 된다 — 현장 사진+투표 영역전">
+<style>
+  :root{
+    --bg:#0a0e17; --card:#121a2b; --line:rgba(255,255,255,.1);
+    --txt:#e7eef7; --dim:#9fb0c3;
+    --c1:#36d1dc; --c2:#ff6a3d; --c3:#38ef7d; --p:#7b5cff; --gold:#ffd23f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  section{padding:52px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:23px;margin-bottom:8px;letter-spacing:-.3px}
+  h3{font-size:16px;margin-bottom:4px}
+  .label{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);font-weight:700;margin-bottom:14px}
+  .sub{color:var(--dim);font-size:14.5px}
+  .dim{color:var(--dim)}
+
+  .hero{text-align:center;padding:78px 20px 64px;background:radial-gradient(1000px 360px at 50% -40px,rgba(123,92,255,.34),transparent 70%),linear-gradient(160deg,#0c1428,#0a0e17);border-bottom:1px solid var(--line)}
+  .verified{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 13px;border:1px solid rgba(56,239,125,.4);background:rgba(56,239,125,.1);color:#9af5bf;border-radius:999px;margin-bottom:20px}
+  .logo{font-size:clamp(44px,10vw,76px);font-weight:800;letter-spacing:-2px;line-height:1;background:linear-gradient(120deg,#fff,#c7bcff 55%,var(--c1));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .logo small{display:block;font-size:15px;font-weight:600;letter-spacing:3px;color:var(--dim);margin-top:12px}
+  .tag{font-size:clamp(18px,4.3vw,25px);font-weight:700;margin:24px auto 0;max-width:600px;letter-spacing:-.4px}
+  .tag b{background:linear-gradient(120deg,var(--c2),var(--p));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  .loop{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;font-size:12.5px}
+  .loop .n{flex:1;min-width:120px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;text-align:center}
+  .loop .n .i{font-size:24px}
+  .loop .n b{display:block;margin-top:5px;font-size:13px}
+  .loop .n p{color:var(--dim);font-size:12px;margin-top:3px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card .i{font-size:25px;margin-bottom:7px}
+  .card p{font-size:13.5px;color:var(--dim);margin-top:3px}
+
+  ol.steps{list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:9px}
+  ol.steps li{counter-increment:s;position:relative;padding:13px 16px 13px 48px;background:var(--card);border:1px solid var(--line);border-radius:12px;font-size:13.5px}
+  ol.steps li::before{content:counter(s);position:absolute;left:13px;top:12px;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--p),#4a00e0);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:rgba(255,255,255,.04);color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  tbody tr:last-child td{border-bottom:none}
+  .me{background:rgba(123,92,255,.14)}
+  .ck{color:var(--c3);font-weight:700}.x{color:#ff6b81}.tr{color:var(--gold)}
+
+  .flag{border-left:3px solid var(--c2);background:rgba(255,106,61,.08);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13.5px;margin-top:10px}
+  .highlight{background:linear-gradient(135deg,rgba(123,92,255,.18),rgba(74,0,224,.1));border:1px solid rgba(123,92,255,.45);border-radius:16px;padding:24px;text-align:center}
+  footer{padding:38px 20px 66px;text-align:center;color:var(--dim);font-size:13px}
+
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}section{padding:40px 0}table{font-size:12px}th,td{padding:8px}}
+</style>
+</head>
+<body>
+
+  <header class="hero">
+    <div class="verified">✓ deep-interview → ralplan(architect·critic) 합의검증 완료</div>
+    <div class="logo">거점<small>H O L D</small></div>
+    <p class="tag">다닌 곳이 <b>우리 크루의 영토</b>가 된다.</p>
+  </header>
+
+  <div class="wrap">
+
+    <section>
+      <p class="label">한 줄 컨셉</p>
+      <p style="font-size:16px">크루가 실제 장소에서 <b>현장 사진</b>을 올리고, <b>사진끼리 투표(왕좌전)</b>로 그 스팟을 점령한다. 점령은 시간이 지나면 <b>감쇠</b>돼서, 계속 재방문하고 더 좋은 사진으로 뺏고 뺏긴다.</p>
+      <p class="sub" style="margin-top:12px">셋로그의 <b style="color:var(--c1)">참여 엔진</b> + KYRO의 <b style="color:var(--c2)">영토·감쇠·B2B2C</b>를, 영상 리스크 없이 <b>사진+투표</b>로.</p>
+    </section>
+
+    <section>
+      <p class="label">코어 루프</p>
+      <div class="loop">
+        <div class="n"><div class="i">📸</div><b>사진</b><p>앱 내 카메라로 현장 촬영</p></div>
+        <div class="n"><div class="i">🗳️</div><b>투표</b><p>A vs B 블라인드 비교(ELO)</p></div>
+        <div class="n"><div class="i">🚩</div><b>점령</b><p>최고 사진의 크루가 차지</p></div>
+        <div class="n"><div class="i">⏳</div><b>감쇠</b><p>7일 반감기로 약화</p></div>
+        <div class="n"><div class="i">⚔️</div><b>탈환</b><p>더 좋은 사진으로 재경쟁</p></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">🗳️ 왕좌전 — 사진 투표 메커니즘</p>
+      <ol class="steps">
+        <li><b>블라인드 페어 비교</b> — '전체 중 1개'가 아니라 랜덤 A vs B 스와이프 → 조직적 몰표 구조적 차단</li>
+        <li><b>스팟별·사진 단위 ELO</b> — 각 스팟에서 사진들이 ELO 경쟁, 최고 ELO 사진의 크루가 점령</li>
+        <li><b>같은 크루 투표 제외</b> (Day 1 필수)</li>
+        <li><b>투표자 부족 fallback</b> — 사진 1개=24h 대기 후 자동점령(감쇠 2배) / 2개+ 투표미달=최신 자동승리(감쇠 1.5배)</li>
+      </ol>
+    </section>
+
+    <section>
+      <p class="label">⚠️ 위치검증 — 다층 (게임 무결성)</p>
+      <div class="grid3">
+        <div class="card"><div class="i">📷</div><h3>앱 내 카메라</h3><p>갤러리 업로드 차단 + 촬영시점 GPS 일치</p></div>
+        <div class="card"><div class="i">📶</div><h3>네트워크 교차검증</h3><p>Wi-Fi/신호로 실제 체류 확인 (GPS 조작 비용↑)</p></div>
+        <div class="card"><div class="i">🚨</div><h3>신고·자동차단</h3><p>반복 신고 스팟 자동 제지 + 사진 모더레이션</p></div>
+      </div>
+      <div class="flag">Critic이 "사진만으론 뚫린다(심각도 High)"고 지적 → 검증 레이어를 P0로 상향.</div>
+    </section>
+
+    <section>
+      <p class="label">🔥 런치 전략 — 밀도 주입</p>
+      <p class="sub" style="margin-bottom:12px">"재미는 밀도가 있어야 발생, 밀도는 재미가 있어야 모임" 순환의존을 깨는 3종 시동:</p>
+      <div class="grid3">
+        <div class="card"><div class="i">🎓</div><h3>핫플 한 구역 집중</h3><p>대학가 등 한 곳에 밀집 시딩 (전국 분산 X)</p></div>
+        <div class="card"><div class="i">👥</div><h3>사전 크루 모집</h3><p>대학 크루 3~5개 '개교 전쟁' 이벤트로 출발</p></div>
+        <div class="card"><div class="i">🌋</div><h3>제주 = 첫 원정</h3><p>여행을 PoC·첫 영토 개척 이벤트로</p></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">차별화 — white space</p>
+      <table>
+        <thead><tr><th>　</th><th>현장 사진 경쟁</th><th>영토·감쇠</th><th>크루 참여</th><th>저기술리스크</th></tr></thead>
+        <tbody>
+          <tr><td>셋로그</td><td class="tr">△</td><td class="x">✕</td><td class="ck">○</td><td class="ck">○</td></tr>
+          <tr><td>KYRO</td><td class="x">✕</td><td class="ck">○</td><td class="tr">△</td><td class="ck">○</td></tr>
+          <tr><td>인스타·맵리뷰</td><td class="tr">△</td><td class="x">✕</td><td class="x">✕</td><td class="ck">○</td></tr>
+          <tr class="me"><td><b>거점(HOLD)</b></td><td class="ck">○</td><td class="ck">○</td><td class="ck">○</td><td class="ck">○</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <p class="label">📊 성공기준 (MVP, 리텐션 기반)</p>
+      <div class="grid2">
+        <div class="card"><div class="i">🔁</div><h3>D7 리텐션 ≥ 30%</h3><p>또는 주 2회+ 사진 제출 유저 ≥ 40%</p></div>
+        <div class="card"><div class="i">⚔️</div><h3>낯선 크루 간 탈환 발생</h3><p>친구 아닌 크루가 실제로 거점을 뺏고 뺏김</p></div>
+      </div>
+      <p class="sub" style="margin-top:10px">가게 후원(BM)·원정(여행)·전역 랭킹은 P1. 핵심 가설 "사진경쟁+투표가 재미있는가?"부터 검증.</p>
+    </section>
+
+    <section style="border-bottom:none">
+      <div class="highlight">
+        <h2>✨ 진짜 새로운 지점</h2>
+        <p>"현장 사진 경쟁 + 영토 감쇠 게임 + 크루전"을 한 데 묶은 건 아무도 안 한다.<br>두 검증된 심리 엔진(셋로그·KYRO)을, 영상 없이 가볍게 합쳐 실제 장소에 꽂는다.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    🏍️ 제주 여행 프로젝트 · 거점(HOLD) 기획 산출물<br>
+    deep-interview → ralplan(architect·critic) 검증 · 2026
+  </footer>
+
+</body>
+</html>

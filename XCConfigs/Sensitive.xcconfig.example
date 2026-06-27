@@ -1,0 +1,17 @@
+// Sensitive.xcconfig.example — COMMITTED TEMPLATE
+//
+// The real file (XCConfigs/Sensitive.xcconfig) is git-ignored and lives only on your machine.
+// Other xcconfigs `#include "./Sensitive.xcconfig"`, so the real file MUST exist before
+// `tuist generate`. Create it from this template:
+//
+//   cp XCConfigs/Sensitive.xcconfig.example XCConfigs/Sensitive.xcconfig
+//
+// Then fill in local-only secrets below. NEVER commit real keys.
+// (Phase 2 backend will add: SUPABASE_URL, SUPABASE_ANON_KEY, R2_ACCOUNT_ID, etc.)
+
+// DEVELOPMENT_TEAM =
+// SUPABASE_URL =
+// SUPABASE_ANON_KEY =
+// R2_ACCOUNT_ID =
+// R2_ACCESS_KEY_ID =
+// R2_SECRET_ACCESS_KEY =
