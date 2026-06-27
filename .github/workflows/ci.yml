@@ -35,19 +35,34 @@ jobs:
       - name: Generate project
         run: mise exec -- tuist generate --no-open
 
-      # NOTE: destination sim must exist on the runner image; adjust if the image changes.
+      # Pick an iPhone simulator that actually exists on this runner image (don't hardcode a name).
+      - name: Resolve simulator
+        run: |
+          echo "── available simulators ──"
+          xcrun simctl list devices available
+          UDID=$(xcrun simctl list --json devices available | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)['devices']
+          iphones = [dev for rt, devs in d.items() if 'iOS' in rt
+                     for dev in devs if dev['name'].startswith('iPhone')]
+          print(iphones[-1]['udid'] if iphones else '')
+          ")
+          if [ -z "$UDID" ]; then echo "No iPhone simulator available"; exit 1; fi
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+          echo "Using simulator UDID: $UDID"
+
       - name: Test (Domain)
         run: |
           xcodebuild test \
             -workspace TRACE.xcworkspace \
             -scheme Domain \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
-            -quiet CODE_SIGNING_ALLOWED=NO
+            -destination "platform=iOS Simulator,id=$SIM_UDID" \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Build (TraceApp)
         run: |
           xcodebuild build \
             -workspace TRACE.xcworkspace \
             -scheme TraceApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination "platform=iOS Simulator,id=$SIM_UDID" \
             -quiet CODE_SIGNING_ALLOWED=NO
