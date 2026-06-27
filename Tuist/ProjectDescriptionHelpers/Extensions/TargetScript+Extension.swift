@@ -25,12 +25,15 @@ public extension TargetScript {
 private extension TargetScript.UtilityTool {
   var command: String {
     switch self {
+    // swiftlint/swiftgen binaries are git-ignored (large vendored tools); on CI / a fresh
+    // clone they are absent, so guard each — run when present, skip with a warning otherwise.
+    // The codegen output (Strings.swift) is committed, so skipping swiftgen on CI is safe.
     case .swiftLint:
-      "${PROJECT_DIR}/../../Tools/swiftlint --config \"${PROJECT_DIR}/../UIComponent/Resources/swiftlint.yml\""
+      #"if [ -f "${PROJECT_DIR}/../../Tools/swiftlint" ]; then "${PROJECT_DIR}/../../Tools/swiftlint" --config "${PROJECT_DIR}/../UIComponent/Resources/swiftlint.yml"; else echo "warning: Tools/swiftlint not found — skipping lint"; fi"#
     case .localization:
       "${PROJECT_DIR}/../../Tools/generate_strings.sh"
     case .swiftGen:
-      "${PROJECT_DIR}/../../Tools/swiftgen config run --config ${PROJECT_DIR}/../UIComponent/Resources/swiftgen.yml"
+      #"if [ -f "${PROJECT_DIR}/../../Tools/swiftgen" ]; then "${PROJECT_DIR}/../../Tools/swiftgen" config run --config "${PROJECT_DIR}/../UIComponent/Resources/swiftgen.yml"; else echo "warning: Tools/swiftgen not found — skipping codegen (committed output used)"; fi"#
     case .licensePlist:
       "${PROJECT_DIR}/../../../Tools/open_license.sh"
     }
