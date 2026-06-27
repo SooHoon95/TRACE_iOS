@@ -11,7 +11,8 @@ let project = Project.framework(
   platform: .iOS,
   dependencies: [
     .appFoundation,
-    .domain
+    .domain,
+    .keychainAccess
   ],
   testDependencies: [
 
