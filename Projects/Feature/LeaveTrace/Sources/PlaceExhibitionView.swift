@@ -6,6 +6,7 @@ import UIComponent
 /// ("여기 N명이 남겼어") and the big "너도 남겨" claiming CTA.
 public struct PlaceExhibitionView: View {
     @ObservedObject var vm: ClaimViewModel
+    @State private var selected: Moment?
 
     public init(vm: ClaimViewModel) {
         self.vm = vm
@@ -25,7 +26,12 @@ public struct PlaceExhibitionView: View {
                             .frame(height: 220)
                     } else if let ex = vm.exhibition, !ex.isEmpty {
                         LazyVGrid(columns: columns, spacing: 12) {
-                            ForEach(ex.moments) { MomentGridCell(moment: $0) }
+                            ForEach(ex.moments) { moment in
+                                Button { selected = moment } label: {
+                                    MomentGridCell(moment: moment)
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     } else {
                         emptyState
@@ -43,6 +49,14 @@ public struct PlaceExhibitionView: View {
         .sheet(isPresented: $vm.isComposing) {
             LeaveMomentView(vm: vm)
                 .presentationDetents([.large])
+        }
+        .sheet(item: $selected) { m in
+            MomentDetailView(
+                moment: m,
+                placeName: vm.placeDisplayName,
+                onReport: { Task { await vm.report(m.id) } },
+                onHide: { Task { await vm.hide(m.id) } }
+            )
         }
     }
 

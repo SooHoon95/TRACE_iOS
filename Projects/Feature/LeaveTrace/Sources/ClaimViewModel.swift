@@ -74,4 +74,24 @@ public final class ClaimViewModel: ObservableObject {
             errorMessage = "남기지 못했어요. 다시 시도해줘"
         }
     }
+
+    /// Report a moment (safety). Removes it from public surfaces and refreshes.
+    public func report(_ momentID: UUID) async {
+        do {
+            try await store.report(momentID: momentID, by: user.id)
+            await load()
+        } catch {
+            errorMessage = "신고하지 못했어요"
+        }
+    }
+
+    /// Hide a moment from view. Removes it from public surfaces and refreshes.
+    public func hide(_ momentID: UUID) async {
+        do {
+            try await store.hide(momentID: momentID, by: user.id)
+            await load()
+        } catch {
+            errorMessage = "숨기지 못했어요"
+        }
+    }
 }
