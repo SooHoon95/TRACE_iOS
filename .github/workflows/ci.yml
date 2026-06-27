@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feat/**']
   pull_request:
     branches: [main]
 
@@ -11,8 +11,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  backend:
+    name: Backend · pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        working-directory: backend
+        run: pytest -q
+
   build-test:
-    name: Generate · Test · Build
+    name: iOS · Generate · Test · Build
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +74,14 @@ jobs:
           xcodebuild test \
             -workspace TRACE.xcworkspace \
             -scheme Domain \
+            -destination "platform=iOS Simulator,id=$SIM_UDID" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Test (Infrastructure)
+        run: |
+          xcodebuild test \
+            -workspace TRACE.xcworkspace \
+            -scheme Infrastructure \
             -destination "platform=iOS Simulator,id=$SIM_UDID" \
             CODE_SIGNING_ALLOWED=NO
 
