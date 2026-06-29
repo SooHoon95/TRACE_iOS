@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .. import models, schemas, service
 from ..db import get_db
 from ..geo import haversine_m
+from ..ratelimit import rate_limit
 from ..security import get_current_user
 
 router = APIRouter(prefix="/places", tags=["places"])
@@ -30,7 +31,7 @@ async def nearby(
     return out
 
 
-@router.post("/resolve", response_model=schemas.PlaceOut)
+@router.post("/resolve", response_model=schemas.PlaceOut, dependencies=[Depends(rate_limit)])
 async def resolve(
     body: schemas.ResolvePlaceIn,
     user: models.Profile = Depends(get_current_user),

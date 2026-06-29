@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .. import models, schemas, service
 from ..config import get_settings
 from ..db import get_db
+from ..ratelimit import rate_limit
 from ..security import get_current_user
 
 router = APIRouter(tags=["moments"])
@@ -35,7 +36,12 @@ async def feed(
     return [service.moment_to_out(m, names.get(m.author_id, "여행자")) for m in moments]
 
 
-@router.post("/moments", response_model=schemas.MomentOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/moments",
+    response_model=schemas.MomentOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit)],
+)
 async def create_moment(
     body: schemas.MomentCreateIn,
     user: models.Profile = Depends(get_current_user),
@@ -80,7 +86,11 @@ async def my_moments(
     return [service.moment_to_out(m, user.nickname) for m in moments]
 
 
-@router.post("/moments/{moment_id}/report", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/moments/{moment_id}/report",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(rate_limit)],
+)
 async def report_moment(
     moment_id: str,
     body: schemas.ReportIn,
@@ -109,7 +119,11 @@ async def report_moment(
         await db.commit()
 
 
-@router.post("/moments/{moment_id}/hide", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/moments/{moment_id}/hide",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(rate_limit)],
+)
 async def hide_moment(
     moment_id: str,
     user: models.Profile = Depends(get_current_user),

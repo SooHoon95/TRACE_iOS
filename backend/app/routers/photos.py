@@ -5,13 +5,19 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import Response
 
 from .. import models, schemas
+from ..ratelimit import rate_limit
 from ..security import get_current_user
 from ..storage import LocalPhotoStorage, storage
 
 router = APIRouter(prefix="/photos", tags=["photos"])
 
 
-@router.post("", response_model=schemas.PhotoOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=schemas.PhotoOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit)],
+)
 async def upload_photo(
     file: UploadFile = File(...),
     user: models.Profile = Depends(get_current_user),

@@ -27,7 +27,8 @@ pytest -q
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| `GET`  | `/health` | – | liveness |
+| `GET`  | `/health` | – | liveness (process up) |
+| `GET`  | `/ready` | – | readiness (DB reachable; `503` if not) |
 | `POST` | `/auth/guest` | – | anonymous session → JWT |
 | `POST` | `/auth/oauth` | – | Apple/Kakao token exchange → JWT |
 | `GET`  | `/auth/me` | Bearer | current user |
@@ -46,6 +47,19 @@ pytest -q
 
 Auth is a Bearer JWT (HS256) issued by `/auth/guest` or `/auth/oauth`. The iOS client
 verifies Apple/Kakao on-device, then posts the provider token to `/auth/oauth`.
+
+## Operational hardening
+
+- **Liveness vs readiness** — `/health` is cheap (process up); `/ready` runs `SELECT 1` and
+  returns `503` if the DB is down, so a load balancer can drain the node.
+- **Request correlation** — every response carries an `X-Request-ID` header (an inbound one is
+  echoed, else a fresh id is minted) for log tracing.
+- **Rate limiting** — an in-process sliding window throttles mutating endpoints per client IP
+  per path. Tune with `RATE_LIMIT_PER_MINUTE` (default `120`; `0` disables). Single-process
+  by design (OCI Always-Free is one node); swap `app/ratelimit.py` for a shared store if it
+  ever scales out. Over-limit requests get `429 {"detail":"rate limit exceeded"}`.
+- **Error shape** — unhandled exceptions return JSON `{"detail":"internal server error"}` with
+  `500` instead of an HTML stack trace; `HTTPException`s keep their `{"detail": …}` shape.
 
 ## Deploy to OCI (Always Free)
 
@@ -82,24 +96,26 @@ For photos, `STORAGE_BACKEND=oci` requires `oci` in the image — uncomment it i
 ## Environment variables
 
 See `.env.example`. Key ones: `DATABASE_URL`, `JWT_SECRET`, `STORAGE_BACKEND`
-(`local`|`oci`), `PUBLIC_BASE_URL`, `APPLE_CLIENT_ID`, `KAKAO_REST_API_KEY`, and the
+(`local`|`oci`), `PUBLIC_BASE_URL`, `APPLE_CLIENT_ID`, `KAKAO_REST_API_KEY`,
+`RATE_LIMIT_PER_MINUTE` (default `120`), `REPORT_HIDE_THRESHOLD` (default `3`), and the
 `OCI_*` group when storing photos in Object Storage.
 
 ## Layout
 
 ```
 app/
-  main.py          FastAPI app + lifespan (table create)
+  main.py          FastAPI app + lifespan, /health + /ready, request-id, error handler
   config.py        Settings (env/.env)
   db.py            async engine/session
   models.py        Profile · Place · Moment · MomentReport
   schemas.py       request/response DTOs (map to iOS Domain)
   service.py       resolve-or-create, aggregates, serialization
   security.py      JWT issue + get_current_user
+  ratelimit.py     in-process sliding-window limiter + rate_limit dependency
   storage.py       Local + OCI photo backends (PhotoStore parity)
   geo.py           haversine
   providers/       apple.py (JWKS) · kakao.py (/v2/user/me)
   routers/         auth · places · moments · photos
-tests/             core-loop e2e (SQLite)
+tests/             core-loop e2e + hardening (SQLite)
 Dockerfile · docker-compose.yml   (OCI host)
 ```

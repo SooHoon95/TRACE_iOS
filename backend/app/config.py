@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     cors_origins: str = "*"
     # Moderation: auto-hide a moment once this many DISTINCT users report it (T2.11).
     report_hide_threshold: int = 3
+    # Rate limiting: max mutating requests per client IP, per path, per minute (0 = off).
+    rate_limit_per_minute: int = 120
 
     # Auth providers (verification still checks signature/issuer when these are blank)
     apple_client_id: str = ""  # expected `aud` of the Apple id_token

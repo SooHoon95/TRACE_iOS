@@ -7,6 +7,7 @@ from .. import models, schemas
 from ..db import get_db
 from ..providers.apple import verify_apple
 from ..providers.kakao import verify_kakao
+from ..ratelimit import rate_limit
 from ..security import create_access_token, get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -21,7 +22,7 @@ def _auth_out(user: models.Profile) -> schemas.AuthOut:
     )
 
 
-@router.post("/guest", response_model=schemas.AuthOut)
+@router.post("/guest", response_model=schemas.AuthOut, dependencies=[Depends(rate_limit)])
 async def guest(body: schemas.GuestIn, db: AsyncSession = Depends(get_db)):
     user = models.Profile(nickname=body.nickname or "게스트", provider="guest")
     db.add(user)
@@ -30,7 +31,7 @@ async def guest(body: schemas.GuestIn, db: AsyncSession = Depends(get_db)):
     return _auth_out(user)
 
 
-@router.post("/oauth", response_model=schemas.AuthOut)
+@router.post("/oauth", response_model=schemas.AuthOut, dependencies=[Depends(rate_limit)])
 async def oauth(body: schemas.OAuthIn, db: AsyncSession = Depends(get_db)):
     provider = body.provider.lower()
     if provider == "apple":
