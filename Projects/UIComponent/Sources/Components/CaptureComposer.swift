@@ -1,50 +1,65 @@
 import SwiftUI
+import PhotosUI
+import UIKit
 import Domain
 
 /// Composer for leaving a moment at a place.
 ///
 /// **Photo is the only required field** (low-friction claim): caption, companion, vibe and
 /// visibility are all optional. `canSubmit` is driven solely by whether a photo exists.
-/// The owning screen presents the on-device camera via `onCapture` and passes the result
-/// back through `photo`; with no `onCapture` (catalog/preview) tapping the frame simulates a capture.
+/// The photo is chosen via the system `PhotosPicker` (works in the simulator); the selected
+/// bytes ride along in `Draft.photoData` so the owning screen can upload them. On a real
+/// device this frame can be swapped for the on-device camera with no change to `Draft`.
 /// Mirrors components/content/CaptureComposer.jsx.
 public struct CaptureComposer: View {
-    /// The composed draft returned on submit. All fields optional except the (already-attached) photo.
+    /// The composed draft returned on submit. All fields optional except the photo bytes.
     public struct Draft {
         public let caption: String?
         public let companion: Companion?
         public let vibe: VibeTag?
         public let visibility: MomentVisibility
+        /// The selected image bytes to upload (nil only on the catalog/preview path).
+        public let photoData: Data?
+
+        public init(caption: String?,
+                    companion: Companion?,
+                    vibe: VibeTag?,
+                    visibility: MomentVisibility,
+                    photoData: Data?) {
+            self.caption = caption
+            self.companion = companion
+            self.vibe = vibe
+            self.visibility = visibility
+            self.photoData = photoData
+        }
     }
 
     let place: String
     /// "여기 N명이 남겼어" FOMO peek; hidden when 0.
     let contributorCount: Int
-    /// The captured photo (nil = not captured yet).
+    /// An optional preset preview image (e.g. catalog). Real captures come from the picker.
     let photo: Image?
-    /// Tap the frame to capture. nil → catalog mode (tap simulates a capture).
-    let onCapture: (() -> Void)?
     let onSubmit: ((Draft) -> Void)?
 
     @State private var caption: String = ""
     @State private var companion: Companion? = nil
     @State private var vibe: VibeTag? = nil
     @State private var isPrivate: Bool = false
-    @State private var demoCaptured: Bool = false   // catalog-mode stand-in for a real photo
+    @State private var pickerItem: PhotosPickerItem?
+    @State private var pickedImage: Image?
+    @State private var pickedData: Data?
 
     public init(place: String = "성수동 적산가옥",
                 contributorCount: Int = 0,
                 photo: Image? = nil,
-                onCapture: (() -> Void)? = nil,
                 onSubmit: ((Draft) -> Void)? = nil) {
         self.place = place
         self.contributorCount = contributorCount
         self.photo = photo
-        self.onCapture = onCapture
         self.onSubmit = onSubmit
     }
 
-    private var hasPhoto: Bool { photo != nil || demoCaptured }
+    private var hasPhoto: Bool { pickedImage != nil || photo != nil }
     private var canSubmit: Bool { hasPhoto }   // photo-only requirement
 
     public var body: some View {
@@ -75,7 +90,8 @@ public struct CaptureComposer: View {
                     onSubmit?(Draft(caption: caption.isEmpty ? nil : caption,
                                     companion: companion,
                                     vibe: vibe,
-                                    visibility: isPrivate ? .privateOnly : .publicExhibit))
+                                    visibility: isPrivate ? .privateOnly : .publicExhibit,
+                                    photoData: pickedData))
                 }
                 .disabled(!canSubmit)
                 .opacity(canSubmit ? 1 : 0.5)
@@ -95,20 +111,22 @@ public struct CaptureComposer: View {
     }
 
     private var photoFrame: some View {
-        Button {
-            if let onCapture { onCapture() } else { demoCaptured = true }
-        } label: {
+        PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
             ZStack {
-                if let photo {
-                    photo.resizable().scaledToFill()
-                } else if demoCaptured {
-                    LinearGradient(colors: [(vibe ?? .scenic).color, TraceColor.paper100],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing)
-                        .overlay(captureLabel("촬영됨 · 다시 찍기"))
+                if let shown = pickedImage ?? photo {
+                    shown.resizable().scaledToFill()
+                        .overlay(alignment: .bottomTrailing) {
+                            Text(pickedImage != nil ? "다시 고르기" : "사진 바꾸기")
+                                .traceType(.bodyXS).fontWeight(.semibold)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 10).padding(.vertical, 5)
+                                .background(.black.opacity(0.45), in: Capsule())
+                                .padding(10)
+                        }
                 } else {
                     LinearGradient(colors: [TraceColor.surfaceSunken, TraceColor.paper100],
                                    startPoint: .topLeading, endPoint: .bottomTrailing)
-                        .overlay(captureLabel("📷 이 자리에서 촬영하기"))
+                        .overlay(captureLabel("📷 이 자리의 사진 고르기"))
                 }
             }
             .frame(height: 150)
@@ -116,13 +134,25 @@ public struct CaptureComposer: View {
             .clipped()
         }
         .buttonStyle(.plain)
+        .onChange(of: pickerItem) { newItem in
+            guard let newItem else { return }
+            Task {
+                if let data = try? await newItem.loadTransferable(type: Data.self),
+                   let uiImage = UIImage(data: data) {
+                    await MainActor.run {
+                        pickedData = data
+                        pickedImage = Image(uiImage: uiImage)
+                    }
+                }
+            }
+        }
     }
 
     private func captureLabel(_ text: String) -> some View {
         Text(text)
             .traceType(.bodySM)
             .fontWeight(.semibold)
-            .foregroundStyle(demoCaptured ? Color.white.opacity(0.95) : TraceColor.textSecondary)
+            .foregroundStyle(TraceColor.textSecondary)
     }
 
     private var header: some View {

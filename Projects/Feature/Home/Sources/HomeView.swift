@@ -30,11 +30,13 @@ public struct HomeView: View {
     @StateObject private var vm: HomeViewModel
     private let store: any TraceStore
     private let user: User
+    private let photoStore: any PhotoStore
     @State private var claimingPlace: Place?
 
-    public init(store: any TraceStore, user: User) {
+    public init(store: any TraceStore, user: User, photoStore: any PhotoStore = LocalPhotoStore()) {
         self.store = store
         self.user = user
+        self.photoStore = photoStore
         _vm = StateObject(wrappedValue: HomeViewModel(store: store))
     }
 
@@ -53,7 +55,7 @@ public struct HomeView: View {
         .background(TraceColor.paper50.ignoresSafeArea())
         .task { await vm.load() }
         .sheet(item: $claimingPlace) { place in
-            ClaimSheet(store: store, user: user, place: place)
+            ClaimSheet(store: store, user: user, photoStore: photoStore, place: place)
         }
     }
 
@@ -130,12 +132,13 @@ public struct HomeView: View {
 private struct ClaimSheet: View {
     let store: any TraceStore
     let user: User
+    let photoStore: any PhotoStore
     let place: Place
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            LeaveTraceFeatureView(store: store, user: user, place: place)
+            LeaveTraceFeatureView(store: store, user: user, photoStore: photoStore, place: place)
                 .toolbar(.hidden, for: .navigationBar)
                 .safeAreaInset(edge: .top) {
                     HStack {

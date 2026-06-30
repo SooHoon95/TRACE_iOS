@@ -16,13 +16,18 @@ public final class ClaimViewModel: ObservableObject {
     @Published public var errorMessage: String?
 
     private let store: any TraceStore
+    private let photoStore: any PhotoStore
     private let user: User
     private let placeCoordinate: Coordinate
     private let placeName: String
     private var placeID: UUID
 
-    public init(store: any TraceStore, user: User, place: Place) {
+    public init(store: any TraceStore,
+                user: User,
+                photoStore: any PhotoStore = LocalPhotoStore(),
+                place: Place) {
         self.store = store
+        self.photoStore = photoStore
         self.user = user
         self.placeID = place.id
         self.placeCoordinate = place.coordinate
@@ -56,10 +61,19 @@ public final class ClaimViewModel: ObservableObject {
             )
             placeID = place.id
 
+            // Upload the picked photo and attach the real storage ref. With no bytes
+            // (catalog/preview path) fall back to a synthetic ref so the flow still runs.
+            let photoRef: String
+            if let data = draft.photoData {
+                photoRef = try await photoStore.upload(data, key: "moment-\(UUID().uuidString).jpg")
+            } else {
+                photoRef = "user-\(UUID().uuidString).jpg"
+            }
+
             let moment = Moment(
                 placeID: place.id,
                 authorID: user.id,
-                photoRef: "user-\(UUID().uuidString).jpg",
+                photoRef: photoRef,
                 caption: draft.caption,
                 companion: draft.companion,
                 vibe: draft.vibe,

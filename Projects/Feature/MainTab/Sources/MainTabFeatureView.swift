@@ -14,15 +14,18 @@ import Map
 public struct MainTabFeatureView: View {
   private let store: any TraceStore
   private let user: User
+  private let photoStore: any PhotoStore
   private let onSignOut: () -> Void
   @State private var selection = "home"
   @State private var presentingClaim = false
 
   public init(store: any TraceStore = Demo.store(),
               user: User = .demo,
+              photoStore: any PhotoStore = LocalPhotoStore(),
               onSignOut: @escaping () -> Void = {}) {
     self.store = store
     self.user = user
+    self.photoStore = photoStore
     self.onSignOut = onSignOut
   }
 
@@ -42,7 +45,7 @@ public struct MainTabFeatureView: View {
     }
     .background(TraceColor.paper50.ignoresSafeArea())
     .fullScreenCover(isPresented: $presentingClaim) {
-      ClaimModal(store: store, user: user)
+      ClaimModal(store: store, user: user, photoStore: photoStore)
     }
   }
 
@@ -59,10 +62,10 @@ public struct MainTabFeatureView: View {
 
   @ViewBuilder private var content: some View {
     switch selection {
-    case "map":        MapFeatureView(store: store, user: user)
+    case "map":        MapFeatureView(store: store, user: user, photoStore: photoStore)
     case "collection": CollectionFeatureView(store: store, userID: user.id)
     case "me":         IdentityFeatureView(user: user, onSignOut: onSignOut)
-    default:           HomeView(store: store, user: user)
+    default:           HomeView(store: store, user: user, photoStore: photoStore)
     }
   }
 }
@@ -73,11 +76,12 @@ public struct MainTabFeatureView: View {
 private struct ClaimModal: View {
   let store: any TraceStore
   let user: User
+  let photoStore: any PhotoStore
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     NavigationStack {
-      LeaveTraceFeatureView(store: store, user: user, place: Demo.seongsan)
+      LeaveTraceFeatureView(store: store, user: user, photoStore: photoStore, place: Demo.seongsan)
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .top) {
           HStack {

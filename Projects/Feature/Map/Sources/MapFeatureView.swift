@@ -22,6 +22,7 @@ public struct MapFeatureView: View {
     @StateObject private var vm: MapViewModel
     private let store: any TraceStore
     private let user: User
+    private let photoStore: any PhotoStore
     @State private var preview: Place?
     @State private var opening: Place?
 
@@ -30,9 +31,12 @@ public struct MapFeatureView: View {
         span: MKCoordinateSpan(latitudeDelta: 0.8, longitudeDelta: 0.8)
     )
 
-    public init(store: any TraceStore = Demo.store(), user: User = .demo) {
+    public init(store: any TraceStore = Demo.store(),
+                user: User = .demo,
+                photoStore: any PhotoStore = LocalPhotoStore()) {
         self.store = store
         self.user = user
+        self.photoStore = photoStore
         _vm = StateObject(wrappedValue: MapViewModel(store: store))
     }
 
@@ -54,7 +58,7 @@ public struct MapFeatureView: View {
         .overlay(alignment: .bottom) { previewCard }
         .task { await vm.load() }
         .sheet(item: $opening) { place in
-            ClaimSheet(store: store, user: user, place: place)
+            ClaimSheet(store: store, user: user, photoStore: photoStore, place: place)
         }
     }
 
@@ -97,12 +101,13 @@ public struct MapFeatureView: View {
 private struct ClaimSheet: View {
     let store: any TraceStore
     let user: User
+    let photoStore: any PhotoStore
     let place: Place
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            LeaveTraceFeatureView(store: store, user: user, place: place)
+            LeaveTraceFeatureView(store: store, user: user, photoStore: photoStore, place: place)
                 .toolbar(.hidden, for: .navigationBar)
                 .safeAreaInset(edge: .top) {
                     HStack {
