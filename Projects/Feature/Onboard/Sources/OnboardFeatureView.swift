@@ -2,16 +2,24 @@ import SwiftUI
 import UIComponent
 import Domain
 
+/// Pre-auth entry. Login-first: the only way in is Apple or Kakao — no guest path.
+/// The actual provider exchange is injected; defaults throw `notConfigured` so the
+/// screen degrades gracefully until the real Apple cert / Kakao key land (T2.6).
 public struct OnboardFeatureView: View {
-  private let onGuestStart: () -> Void
-  private let onLogin: () -> Void
+  public typealias SignInAction = () async throws -> Void
+
+  private let onSignInApple: SignInAction
+  private let onSignInKakao: SignInAction
+
+  @State private var isSigningIn = false
+  @State private var errorMessage: String?
 
   public init(
-    onGuestStart: @escaping () -> Void = {},
-    onLogin: @escaping () -> Void = {}
+    onSignInApple: @escaping SignInAction = { throw OnboardError.notConfigured },
+    onSignInKakao: @escaping SignInAction = { throw OnboardError.notConfigured }
   ) {
-    self.onGuestStart = onGuestStart
-    self.onLogin = onLogin
+    self.onSignInApple = onSignInApple
+    self.onSignInKakao = onSignInKakao
   }
 
   public var body: some View {
@@ -56,27 +64,102 @@ public struct OnboardFeatureView: View {
 
         Spacer()
 
-        // MARK: — Bottom CTAs
+        // MARK: — Login (Apple / Kakao only — no guest)
         VStack(spacing: TraceSpace.s3) {
-          // Permissions note
-          Text("위치와 카메라 권한은 지금 이 자리를 인증하고 사진을 남기는 데만 써요.")
+          if let errorMessage {
+            Text(errorMessage)
+              .traceType(.bodySM)
+              .foregroundStyle(TraceColor.accentStrong)
+              .multilineTextAlignment(.center)
+              .frame(maxWidth: .infinity)
+          }
+
+          // TODO(T2.6): swap for the official SignInWithAppleButton once the Apple
+          // entitlement/cert is provisioned; styled button keeps dev buildable today.
+          ProviderButton(
+            title: "Apple로 계속하기",
+            symbol: "apple.logo",
+            background: .black,
+            foreground: .white
+          ) { signIn(onSignInApple) }
+
+          ProviderButton(
+            title: "카카오로 계속하기",
+            symbol: "message.fill",
+            background: Self.kakaoYellow,
+            foreground: .black
+          ) { signIn(onSignInKakao) }
+
+          Text("계속하면 서비스 약관과 개인정보 처리방침에 동의하는 것으로 간주돼요.")
             .traceType(.bodySM)
             .foregroundStyle(TraceColor.textMuted)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
-
-          TraceButton("게스트로 시작", variant: .primary, size: .lg) {
-            onGuestStart()
-          }
-
-          TraceButton("로그인", variant: .ghost, size: .lg) {
-            onLogin()
-          }
+            .padding(.top, TraceSpace.s1)
         }
+        .disabled(isSigningIn)
         .padding(.bottom, TraceSpace.s10)
       }
       .padding(.horizontal, TraceSpace.s6)
+
+      if isSigningIn {
+        Color.black.opacity(0.08).ignoresSafeArea()
+        ProgressView()
+          .controlSize(.large)
+          .tint(TraceColor.accent)
+      }
     }
+  }
+
+  // Kakao brand color (#FEE500) — not part of the app palette, scoped to this screen.
+  private static let kakaoYellow = Color(red: 254 / 255, green: 229 / 255, blue: 0)
+
+  private func signIn(_ action: @escaping SignInAction) {
+    Task { @MainActor in
+      isSigningIn = true
+      errorMessage = nil
+      do {
+        try await action()
+      } catch {
+        errorMessage = "로그인 연동은 곧 지원돼요. 조금만 기다려 주세요."
+      }
+      isSigningIn = false
+    }
+  }
+}
+
+/// Errors surfaced by the onboarding sign-in flow.
+public enum OnboardError: Error {
+  /// No real provider wired yet (default injected action).
+  case notConfigured
+}
+
+// MARK: — Provider login button
+
+/// Brand-styled full-width login button (Apple / Kakao). Mirrors TraceButton's
+/// press feel via the shared `TracePressStyle`, but carries provider brand colors.
+private struct ProviderButton: View {
+  let title: String
+  let symbol: String
+  let background: Color
+  let foreground: Color
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      HStack(spacing: TraceSpace.s2) {
+        Image(systemName: symbol)
+          .font(.system(size: 17, weight: .semibold))
+        Text(title)
+          .font(TraceType.bodyLG.font.weight(TraceWeight.semibold))
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, 15)
+      .padding(.horizontal, 26)
+      .foregroundStyle(foreground)
+      .background(background, in: RoundedRectangle(cornerRadius: TraceRadius.md, style: .continuous))
+    }
+    .buttonStyle(TracePressStyle())
   }
 }
 
