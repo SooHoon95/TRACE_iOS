@@ -7,6 +7,7 @@ import Router
 /// Holds the session `user` so 프로필/설정 know member vs guest.
 struct IdentityViewFactory: ViewFactory {
     let user: User
+    let onSignOut: () -> Void
 
     @ViewBuilder
     func makeView(_ route: TraceRoute,
@@ -15,7 +16,7 @@ struct IdentityViewFactory: ViewFactory {
         case .profile:
             ProfileView(user: user, nav: navigationStream)
         case .settings:
-            SettingsView(user: user, nav: navigationStream)
+            SettingsView(user: user, nav: navigationStream, onSignOut: onSignOut)
         default:
             EmptyView()
         }

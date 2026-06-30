@@ -14,12 +14,16 @@ import Map
 public struct MainTabFeatureView: View {
   private let store: any TraceStore
   private let user: User
+  private let onSignOut: () -> Void
   @State private var selection = "home"
   @State private var presentingClaim = false
 
-  public init(store: any TraceStore = Demo.store(), user: User = .demo) {
+  public init(store: any TraceStore = Demo.store(),
+              user: User = .demo,
+              onSignOut: @escaping () -> Void = {}) {
     self.store = store
     self.user = user
+    self.onSignOut = onSignOut
   }
 
   private let tabs: [TraceTab] = [
@@ -57,7 +61,7 @@ public struct MainTabFeatureView: View {
     switch selection {
     case "map":        MapFeatureView(store: store, user: user)
     case "collection": CollectionFeatureView(store: store, userID: user.id)
-    case "me":         IdentityFeatureView(user: user)
+    case "me":         IdentityFeatureView(user: user, onSignOut: onSignOut)
     default:           HomeView(store: store, user: user)
     }
   }

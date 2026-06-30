@@ -7,16 +7,19 @@ import Router
 /// 설정 진입/뒤로가기가 `NavigationCoordinator`를 통해 흐른다.
 public struct IdentityFeatureView: View {
   let user: User
+  let onSignOut: () -> Void
   @StateObject private var coordinator = NavigationCoordinator<TraceRoute>()
 
   /// Default demo user (signed-in). Pass `User(..., authProvider: .guest)` to preview the guest 설정.
-  public init(user: User = User(nickname: "지민", authProvider: .apple)) {
+  public init(user: User = User(nickname: "지민", authProvider: .apple),
+              onSignOut: @escaping () -> Void = {}) {
     self.user = user
+    self.onSignOut = onSignOut
   }
 
   public var body: some View {
     CoordinatedRootView(coordinator: coordinator,
-                        factory: IdentityViewFactory(user: user),
+                        factory: IdentityViewFactory(user: user, onSignOut: onSignOut),
                         root: .profile)
   }
 }

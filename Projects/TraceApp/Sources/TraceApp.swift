@@ -60,7 +60,11 @@ struct TraceApp: App {
   var body: some Scene {
     WindowGroup {
       if let user = session.user {
-        MainTabFeatureView(store: session.store, user: user)
+        MainTabFeatureView(
+          store: session.store,
+          user: user,
+          onSignOut: { Task { await session.signOut() } }
+        )
       } else {
         OnboardFeatureView(
           onSignInApple: { try await session.signInApple() },

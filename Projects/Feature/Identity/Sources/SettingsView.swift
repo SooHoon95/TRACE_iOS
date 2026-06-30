@@ -9,11 +9,15 @@ import Router
 public struct SettingsView: View {
     let user: User
     let nav: PassthroughSubject<NavigationEvent<TraceRoute>, Never>
+    let onSignOut: () -> Void
     @State private var publicRange = 0   // 0 = 전시 공개, 1 = 나만
 
-    public init(user: User, nav: PassthroughSubject<NavigationEvent<TraceRoute>, Never>) {
+    public init(user: User,
+                nav: PassthroughSubject<NavigationEvent<TraceRoute>, Never>,
+                onSignOut: @escaping () -> Void = {}) {
         self.user = user
         self.nav = nav
+        self.onSignOut = onSignOut
     }
 
     private var isGuest: Bool { user.isGuest }
@@ -55,7 +59,7 @@ public struct SettingsView: View {
                 Text(user.authProvider == .kakao ? "Kakao" : "Apple")
                     .traceType(.bodyMD).fontWeight(.semibold).foregroundStyle(TraceColor.textSecondary)
             }, divider: true)
-            actionRow("로그아웃")
+            actionRow("로그아웃") { onSignOut() }
         }
         section("백업") {
             row("클라우드 백업", trailing: {
@@ -142,7 +146,7 @@ public struct SettingsView: View {
             row("이용약관", trailing: { chevron }, divider: true)
             row("개인정보 처리방침", trailing: { chevron })
         }
-        actionRowBare("둘러보기 종료")
+        actionRowBare("둘러보기 종료") { onSignOut() }
     }
 
     // MARK: building blocks
@@ -193,21 +197,29 @@ public struct SettingsView: View {
         Text("›").font(.system(size: 18)).foregroundStyle(TraceColor.textFaint)
     }
 
-    private func actionRow(_ title: String) -> some View {
-        HStack {
-            Text(title).traceType(.bodyMD).fontWeight(.bold)
-                .foregroundStyle(TraceColor.accentStrong)
-            Spacer()
+    private func actionRow(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(title).traceType(.bodyMD).fontWeight(.bold)
+                    .foregroundStyle(TraceColor.accentStrong)
+                Spacer()
+            }
+            .padding(.horizontal, 18).padding(.vertical, 15)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, 18).padding(.vertical, 15)
+        .buttonStyle(.plain)
     }
 
-    private func actionRowBare(_ title: String) -> some View {
-        HStack {
-            Text(title).traceType(.bodyMD).fontWeight(.bold)
-                .foregroundStyle(TraceColor.accentStrong)
-            Spacer()
+    private func actionRowBare(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(title).traceType(.bodyMD).fontWeight(.bold)
+                    .foregroundStyle(TraceColor.accentStrong)
+                Spacer()
+            }
+            .padding(.horizontal, 4).padding(.vertical, 2)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, 4).padding(.vertical, 2)
+        .buttonStyle(.plain)
     }
 }
