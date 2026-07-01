@@ -81,7 +81,7 @@ struct TraceApp: App {
         }
       }
       .onOpenURL { url in
-        _ = SocialAuthConfigurator.handle(url: url)  // route Kakao/Google OAuth redirects
+        OauthDeepLinkHandler.shared.handle(url: url)  // Mercury's deep-link dispatcher
       }
     }
   }

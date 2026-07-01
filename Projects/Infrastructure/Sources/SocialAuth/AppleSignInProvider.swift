@@ -1,52 +1,50 @@
+import Foundation
 import UIKit
 import AuthenticationServices
 
 /// Apple native login → **identity token** (id_token JWT), via the delegate-based
-/// ASAuthorization flow. The backend verifies it against Apple's JWKS (`verify_apple`).
-public final class AppleTokenProvider: OAuthTokenProvider {
-    private var delegate: AppleAuthDelegate?
+/// ASAuthorization flow. Mirrors Mercury's `AppleSignInProvider`.
+public final class AppleSignInProvider: OauthSignInable {
+    private var delegate: AppleSignInDelegate?
 
     public init() {}
 
-    public func token() async throws -> String {
+    public func signIn() async throws -> OauthSignInToken {
         try await withCheckedThrowingContinuation { [weak self] continuation in
             Task { @MainActor in
-                let request = ASAuthorizationAppleIDProvider().createRequest()
+                let provider = ASAuthorizationAppleIDProvider()
+                let request = provider.createRequest()
                 request.requestedScopes = [.fullName, .email]
 
-                let delegate = AppleAuthDelegate(continuation: continuation)
-                self?.delegate = delegate
-
                 let controller = ASAuthorizationController(authorizationRequests: [request])
-                controller.delegate = delegate
-                controller.presentationContextProvider = delegate
+                self?.delegate = AppleSignInDelegate(continuation: continuation)
+                controller.delegate = self?.delegate
+                controller.presentationContextProvider = self?.delegate
                 controller.performRequests()
             }
         }
     }
 }
 
-/// Bridges the continuation across ASAuthorization's delegate callbacks. Held by the
-/// provider for the flow's lifetime so it isn't deallocated mid-request.
-private final class AppleAuthDelegate: NSObject,
-                                       ASAuthorizationControllerDelegate,
-                                       ASAuthorizationControllerPresentationContextProviding {
-    private let continuation: CheckedContinuation<String, Error>
+private final class AppleSignInDelegate: NSObject,
+                                         ASAuthorizationControllerDelegate,
+                                         ASAuthorizationControllerPresentationContextProviding {
+    private let continuation: CheckedContinuation<OauthSignInToken, Error>
     private let userCancelCode = 1001
 
-    init(continuation: CheckedContinuation<String, Error>) {
+    init(continuation: CheckedContinuation<OauthSignInToken, Error>) {
         self.continuation = continuation
     }
 
     func authorizationController(controller: ASAuthorizationController,
                                  didCompleteWithAuthorization authorization: ASAuthorization) {
-        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
-              let identityToken = credential.identityToken,
-              let tokenString = String(data: identityToken, encoding: .utf8) else {
+        if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
+           let identityToken = appleIDCredential.identityToken,
+           let tokenString = String(data: identityToken, encoding: .utf8) {
+            continuation.resume(returning: tokenString)
+        } else {
             continuation.resume(throwing: AuthError.noProviderToken)
-            return
         }
-        continuation.resume(returning: tokenString)
     }
 
     func authorizationController(controller: ASAuthorizationController,
