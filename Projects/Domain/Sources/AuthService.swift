@@ -8,6 +8,7 @@ public protocol AuthService: AnyObject {
     var current: User? { get }
     func signInApple() async throws -> User
     func signInKakao() async throws -> User
+    func signInGoogle() async throws -> User
     func continueAsGuest() -> User
     func signOut() async throws
 }

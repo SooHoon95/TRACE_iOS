@@ -18,3 +18,11 @@
 //    TRACE_API_SCHEME = http here.
 // TRACE_API_HOST = api.yourdomain.com
 // TRACE_API_SCHEME = https
+
+// ── Social login (app-embedded client identifiers; kept out of git) ──
+// Kakao Native App Key (카카오 developers → 내 앱 → 앱 키 → 네이티브 앱 키).
+KAKAO_NATIVE_APP_KEY =
+// Google iOS OAuth client id — e.g. 1234-abc.apps.googleusercontent.com
+GOOGLE_CLIENT_ID =
+// Reversed form for the URL scheme — e.g. com.googleusercontent.apps.1234-abc
+GOOGLE_REVERSED_CLIENT_ID =

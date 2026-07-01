@@ -12,7 +12,11 @@ let project = Project.framework(
   dependencies: [
     .appFoundation,
     .domain,
-    .keychainAccess
+    .keychainAccess,
+    .googleSignIn,
+    .kakaoSDKCommon,
+    .kakaoSDKAuth,
+    .kakaoSDKUser
   ],
   testDependencies: [
 

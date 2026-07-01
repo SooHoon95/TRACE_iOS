@@ -2,7 +2,7 @@ import Foundation
 
 /// How a user signed in. Guests can browse but not claim (per the v2.1 flow).
 public enum AuthProvider: String, Codable, Sendable {
-    case apple, kakao, guest
+    case apple, kakao, google, guest
 }
 
 /// The person leaving moments. Identity is the unit accounts/backup hang off of.

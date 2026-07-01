@@ -165,6 +165,12 @@ public final class InMemoryAuthService: AuthService {
         return u
     }
 
+    public func signInGoogle() async throws -> User {
+        let u = User(nickname: "여행자", authProvider: .google)
+        current = u
+        return u
+    }
+
     public func continueAsGuest() -> User {
         let u = User(nickname: "게스트", authProvider: .guest)
         current = u

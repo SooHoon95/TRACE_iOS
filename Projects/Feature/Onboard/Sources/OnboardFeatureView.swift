@@ -10,16 +10,19 @@ public struct OnboardFeatureView: View {
 
   private let onSignInApple: SignInAction
   private let onSignInKakao: SignInAction
+  private let onSignInGoogle: SignInAction
 
   @State private var isSigningIn = false
   @State private var errorMessage: String?
 
   public init(
     onSignInApple: @escaping SignInAction = { throw OnboardError.notConfigured },
-    onSignInKakao: @escaping SignInAction = { throw OnboardError.notConfigured }
+    onSignInKakao: @escaping SignInAction = { throw OnboardError.notConfigured },
+    onSignInGoogle: @escaping SignInAction = { throw OnboardError.notConfigured }
   ) {
     self.onSignInApple = onSignInApple
     self.onSignInKakao = onSignInKakao
+    self.onSignInGoogle = onSignInGoogle
   }
 
   public var body: some View {
@@ -90,6 +93,13 @@ public struct OnboardFeatureView: View {
             foreground: .black
           ) { signIn(onSignInKakao) }
 
+          ProviderButton(
+            title: "Google로 계속하기",
+            background: TraceColor.paper0,
+            foreground: TraceColor.textPrimary,
+            border: TraceColor.hairline
+          ) { signIn(onSignInGoogle) }
+
           Text("계속하면 서비스 약관과 개인정보 처리방침에 동의하는 것으로 간주돼요.")
             .traceType(.bodySM)
             .foregroundStyle(TraceColor.textMuted)
@@ -140,16 +150,19 @@ public enum OnboardError: Error {
 /// press feel via the shared `TracePressStyle`, but carries provider brand colors.
 private struct ProviderButton: View {
   let title: String
-  let symbol: String
+  var symbol: String? = nil
   let background: Color
   let foreground: Color
+  var border: Color = .clear
   let action: () -> Void
 
   var body: some View {
     Button(action: action) {
       HStack(spacing: TraceSpace.s2) {
-        Image(systemName: symbol)
-          .font(.system(size: 17, weight: .semibold))
+        if let symbol {
+          Image(systemName: symbol)
+            .font(.system(size: 17, weight: .semibold))
+        }
         Text(title)
           .font(TraceType.bodyLG.font.weight(TraceWeight.semibold))
       }
@@ -158,6 +171,10 @@ private struct ProviderButton: View {
       .padding(.horizontal, 26)
       .foregroundStyle(foreground)
       .background(background, in: RoundedRectangle(cornerRadius: TraceRadius.md, style: .continuous))
+      .overlay(
+        RoundedRectangle(cornerRadius: TraceRadius.md, style: .continuous)
+          .strokeBorder(border, lineWidth: 1)
+      )
     }
     .buttonStyle(TracePressStyle())
   }

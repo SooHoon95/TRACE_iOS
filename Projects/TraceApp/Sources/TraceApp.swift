@@ -20,6 +20,7 @@ final class SessionStore: ObservableObject {
   private let offlineStore: OfflineFirstTraceStore?
 
   init() {
+    SocialAuthConfigurator.configure()  // init Kakao/Google SDKs (no-op without keys)
     if let client = BackendProvider.makeClient() {
       // Offline-first: claims queue locally and sync in the background (T2.8).
       let offline = OfflineFirstTraceStore(remote: HTTPTraceStore(client: client))
@@ -41,6 +42,7 @@ final class SessionStore: ObservableObject {
 
   func signInApple() async throws { try await signIn { try await $0.signInApple() } }
   func signInKakao() async throws { try await signIn { try await $0.signInKakao() } }
+  func signInGoogle() async throws { try await signIn { try await $0.signInGoogle() } }
 
   /// Runs a provider flow, promotes its result to the active session, and drains any
   /// moments queued offline on a previous run now that authed calls will succeed.
@@ -62,18 +64,24 @@ struct TraceApp: App {
 
   var body: some Scene {
     WindowGroup {
-      if let user = session.user {
-        MainTabFeatureView(
-          store: session.store,
-          user: user,
-          photoStore: session.photoStore,
-          onSignOut: { Task { await session.signOut() } }
-        )
-      } else {
-        OnboardFeatureView(
-          onSignInApple: { try await session.signInApple() },
-          onSignInKakao: { try await session.signInKakao() }
-        )
+      Group {
+        if let user = session.user {
+          MainTabFeatureView(
+            store: session.store,
+            user: user,
+            photoStore: session.photoStore,
+            onSignOut: { Task { await session.signOut() } }
+          )
+        } else {
+          OnboardFeatureView(
+            onSignInApple: { try await session.signInApple() },
+            onSignInKakao: { try await session.signInKakao() },
+            onSignInGoogle: { try await session.signInGoogle() }
+          )
+        }
+      }
+      .onOpenURL { url in
+        _ = SocialAuthConfigurator.handle(url: url)  // route Kakao/Google OAuth redirects
       }
     }
   }
