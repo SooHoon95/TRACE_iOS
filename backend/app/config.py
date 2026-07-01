@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # Auth providers (verification still checks signature/issuer when these are blank)
     apple_client_id: str = ""  # expected `aud` of the Apple id_token
     kakao_rest_api_key: str = ""
+    google_client_id: str = ""  # expected `aud` of the Google id_token
 
     # Photo storage: "local" | "oci"
     storage_backend: str = "local"

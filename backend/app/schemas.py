@@ -23,8 +23,8 @@ class GuestIn(BaseModel):
 
 
 class OAuthIn(BaseModel):
-    provider: str  # "apple" | "kakao"
-    token: str     # Apple id_token (JWT) or Kakao access token
+    provider: str  # "apple" | "kakao" | "google"
+    token: str     # Apple/Google id_token (JWT) or Kakao access token
     nickname: str | None = None
 
 

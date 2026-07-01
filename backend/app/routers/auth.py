@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .. import models, schemas
 from ..db import get_db
 from ..providers.apple import verify_apple
+from ..providers.google import verify_google
 from ..providers.kakao import verify_kakao
 from ..ratelimit import rate_limit
 from ..security import create_access_token, get_current_user
@@ -38,6 +39,8 @@ async def oauth(body: schemas.OAuthIn, db: AsyncSession = Depends(get_db)):
         info = verify_apple(body.token)
     elif provider == "kakao":
         info = await verify_kakao(body.token)
+    elif provider == "google":
+        info = verify_google(body.token)
     else:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "unsupported provider")
 
