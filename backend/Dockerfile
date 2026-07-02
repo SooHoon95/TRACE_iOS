@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.11-slim   # matches the tested dev/CI runtime; arm64 wheels for asyncpg/pydantic-core
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \

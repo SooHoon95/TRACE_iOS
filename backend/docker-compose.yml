@@ -4,6 +4,7 @@
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: trace
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trace}
@@ -18,6 +19,7 @@ services:
 
   api:
     build: .
+    restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+asyncpg://trace:${POSTGRES_PASSWORD:-trace}@db:5432/trace
       JWT_SECRET: ${JWT_SECRET:-change-me-in-prod}
@@ -26,6 +28,8 @@ services:
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8000}
       APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-com.efreedom.trace}
       KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-120}
     depends_on:
       db:
         condition: service_healthy
@@ -33,6 +37,12 @@ services:
       - "8000:8000"
     volumes:
       - photos:/app/_photos
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health').status==200 else sys.exit(1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
   pgdata:
