@@ -44,6 +44,16 @@ final class SessionStore: ObservableObject {
   func signInKakao() async throws { try await signIn { try await $0.signInKakao() } }
   func signInGoogle() async throws { try await signIn { try await $0.signInGoogle() } }
 
+  #if DEBUG
+  /// DEBUG-only: obtain a session without a real OAuth provider so the full loop is
+  /// testable against a local backend (hits `/auth/guest`). Never shipped in release.
+  func devSignIn() async throws {
+    guard let auth else { user = .demo; return }
+    user = try await auth.bootstrapGuest()
+    await offlineStore?.flush()
+  }
+  #endif
+
   /// Runs a provider flow, promotes its result to the active session, and drains any
   /// moments queued offline on a previous run now that authed calls will succeed.
   private func signIn(_ flow: (HTTPAuthService) async throws -> User) async throws {
@@ -76,7 +86,12 @@ struct TraceApp: App {
           OnboardFeatureView(
             onSignInApple: { try await session.signInApple() },
             onSignInKakao: { try await session.signInKakao() },
-            onSignInGoogle: { try await session.signInGoogle() }
+            onSignInGoogle: { try await session.signInGoogle() },
+            onDevSignIn: {
+              #if DEBUG
+              try await session.devSignIn()
+              #endif
+            }
           )
         }
       }

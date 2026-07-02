@@ -11,6 +11,7 @@ public struct OnboardFeatureView: View {
   private let onSignInApple: SignInAction
   private let onSignInKakao: SignInAction
   private let onSignInGoogle: SignInAction
+  private let onDevSignIn: SignInAction
 
   @State private var isSigningIn = false
   @State private var errorMessage: String?
@@ -18,11 +19,13 @@ public struct OnboardFeatureView: View {
   public init(
     onSignInApple: @escaping SignInAction = { throw OnboardError.notConfigured },
     onSignInKakao: @escaping SignInAction = { throw OnboardError.notConfigured },
-    onSignInGoogle: @escaping SignInAction = { throw OnboardError.notConfigured }
+    onSignInGoogle: @escaping SignInAction = { throw OnboardError.notConfigured },
+    onDevSignIn: @escaping SignInAction = { throw OnboardError.notConfigured }
   ) {
     self.onSignInApple = onSignInApple
     self.onSignInKakao = onSignInKakao
     self.onSignInGoogle = onSignInGoogle
+    self.onDevSignIn = onDevSignIn
   }
 
   public var body: some View {
@@ -99,6 +102,17 @@ public struct OnboardFeatureView: View {
             foreground: TraceColor.textPrimary,
             border: TraceColor.hairline
           ) { signIn(onSignInGoogle) }
+
+          #if DEBUG
+          // Local-dev only: bypass real OAuth to exercise the full loop against a
+          // local backend. Compiled out of release builds.
+          ProviderButton(
+            title: "🔧 개발용 로그인 (DEBUG)",
+            background: TraceColor.paper100,
+            foreground: TraceColor.textSecondary,
+            border: TraceColor.hairline
+          ) { signIn(onDevSignIn) }
+          #endif
 
           Text("계속하면 서비스 약관과 개인정보 처리방침에 동의하는 것으로 간주돼요.")
             .traceType(.bodySM)
