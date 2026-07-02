@@ -8,6 +8,8 @@ import UIComponent
 @MainActor
 public final class ClaimViewModel: ObservableObject {
     @Published public private(set) var exhibition: Exhibition?
+    /// Resolved photo URLs per moment (via `PhotoStore.url`), for the grid/detail images.
+    @Published public private(set) var photoURLs: [UUID: URL] = [:]
     @Published public var isComposing = false
     /// Set briefly after a successful claim to drive the "합류" feedback.
     @Published public var justJoinedAt: Date?
@@ -43,9 +45,20 @@ public final class ClaimViewModel: ObservableObject {
         do {
             exhibition = try await store.exhibition(placeID: placeID)
             errorMessage = nil
+            await resolvePhotoURLs()
         } catch {
             errorMessage = "전시를 불러오지 못했어요"
         }
+    }
+
+    /// Resolve each moment's storage ref to a fetchable URL for AsyncImage.
+    private func resolvePhotoURLs() async {
+        guard let moments = exhibition?.moments else { return }
+        var urls = photoURLs
+        for moment in moments where urls[moment.id] == nil {
+            urls[moment.id] = await photoStore.url(for: moment.photoRef)
+        }
+        photoURLs = urls
     }
 
     /// The core action: resolve the place (hybrid snap) and leave the moment, then refresh.
@@ -82,6 +95,7 @@ public final class ClaimViewModel: ObservableObject {
             )
             try await store.leave(moment)
             exhibition = try await store.exhibition(placeID: placeID)
+            await resolvePhotoURLs()
             isComposing = false
             justJoinedAt = Date()        // only after a confirmed write
             errorMessage = nil

@@ -3,9 +3,10 @@ import Domain
 import UIComponent
 
 /// 순간 상세 (S9) — 사진 풀뷰 + 한마디 + 작성자·날짜·장소 + 동행·무드 + 액션(하트·공유·⋯ 신고/숨김).
-/// Photo is a vibe-tinted placeholder in Phase 1 (real image via PhotoStore later).
+/// Renders the real photo via `photoURL`; the vibe gradient stays as loading/fallback.
 public struct MomentDetailView: View {
     let moment: Moment
+    let photoURL: URL?
     let placeName: String
     let onReport: () -> Void
     let onHide: () -> Void
@@ -15,10 +16,12 @@ public struct MomentDetailView: View {
     @State private var showActions = false
 
     public init(moment: Moment,
+                photoURL: URL? = nil,
                 placeName: String,
                 onReport: @escaping () -> Void,
                 onHide: @escaping () -> Void) {
         self.moment = moment
+        self.photoURL = photoURL
         self.placeName = placeName
         self.onReport = onReport
         self.onHide = onHide
@@ -76,6 +79,17 @@ public struct MomentDetailView: View {
                        startPoint: .topLeading, endPoint: .bottomTrailing)
             .frame(height: 360)
             .frame(maxWidth: .infinity)
+            .overlay {
+                if let photoURL {
+                    AsyncImage(url: photoURL) { phase in
+                        if case .success(let image) = phase {
+                            image.resizable().scaledToFill()
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 360)
+                        }
+                    }
+                }
+            }
             .overlay(alignment: .topLeading) {
                 if moment.visibility == .privateOnly {
                     Text("🔒 나만")

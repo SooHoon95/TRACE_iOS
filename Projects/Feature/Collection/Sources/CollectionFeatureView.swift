@@ -7,8 +7,10 @@ import Domain
 public struct CollectionFeatureView: View {
   @StateObject private var vm: CollectionViewModel
 
-  public init(store: any TraceStore = Demo.store(), userID: UUID = User.demo.id) {
-    _vm = StateObject(wrappedValue: CollectionViewModel(store: store, userID: userID))
+  public init(store: any TraceStore = Demo.store(),
+              userID: UUID = User.demo.id,
+              photoStore: any PhotoStore = LocalPhotoStore()) {
+    _vm = StateObject(wrappedValue: CollectionViewModel(store: store, userID: userID, photoStore: photoStore))
   }
 
   private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
@@ -26,7 +28,9 @@ public struct CollectionFeatureView: View {
           emptyState
         } else {
           LazyVGrid(columns: columns, spacing: 12) {
-            ForEach(vm.moments) { MomentGridCell(moment: $0, showPrivateLock: true) }
+            ForEach(vm.moments) {
+              MomentGridCell(moment: $0, photoURL: vm.photoURLs[$0.id], showPrivateLock: true)
+            }
           }
         }
       }

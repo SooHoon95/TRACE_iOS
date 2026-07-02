@@ -2,14 +2,17 @@ import SwiftUI
 import Domain
 
 /// Compact moment cell for newest-first grids (장소 전시 · 도감).
-/// Photo is a vibe-tinted placeholder in Phase 1 (real image loads via PhotoStore later).
+/// Renders the real photo via `photoURL` (resolved from `PhotoStore` by the owning screen);
+/// while loading — or with no URL — it falls back to the vibe-tinted gradient.
 /// Set `showPrivateLock` in 도감 so a "나만" moment shows a lock badge.
 public struct MomentGridCell: View {
     let moment: Moment
+    let photoURL: URL?
     let showPrivateLock: Bool
 
-    public init(moment: Moment, showPrivateLock: Bool = false) {
+    public init(moment: Moment, photoURL: URL? = nil, showPrivateLock: Bool = false) {
         self.moment = moment
+        self.photoURL = photoURL
         self.showPrivateLock = showPrivateLock
     }
 
@@ -45,10 +48,23 @@ public struct MomentGridCell: View {
     }
 
     private var photo: some View {
-        LinearGradient(colors: [(moment.vibe ?? .scenic).color, TraceColor.paper100],
-                       startPoint: .topLeading, endPoint: .bottomTrailing)
-            .aspectRatio(1, contentMode: .fill)
+        Color.clear
+            .aspectRatio(1, contentMode: .fit)
             .frame(maxWidth: .infinity)
+            .background {
+                // Vibe gradient = loading state, failure state, and no-URL fallback.
+                LinearGradient(colors: [(moment.vibe ?? .scenic).color, TraceColor.paper100],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
+            .overlay {
+                if let photoURL {
+                    AsyncImage(url: photoURL) { phase in
+                        if case .success(let image) = phase {
+                            image.resizable().scaledToFill()
+                        }
+                    }
+                }
+            }
             .clipShape(RoundedRectangle(cornerRadius: TraceRadius.md, style: .continuous))
             .overlay(alignment: .topTrailing) {
                 if showPrivateLock && isPrivate {

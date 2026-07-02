@@ -18,13 +18,13 @@ final class SpyPhotoStore: PhotoStore, @unchecked Sendable {
         return returnedRef
     }
 
-    func url(for ref: String) async -> URL? { nil }
+    func url(for ref: String) async -> URL? { URL(string: "https://photos.test/\(ref)") }
 }
 
 final class LeaveTraceTests: XCTestCase {
 
     @MainActor
-    func testClaimUploadsPhotoBytesAndAttachesReturnedRef() async {
+    func testClaimUploadsPhotoBytesAndAttachesReturnedRef() async throws {
         let store = Demo.store()
         let photos = SpyPhotoStore(returnedRef: "remote/abc-123.jpg")
         let vm = ClaimViewModel(store: store, user: .demo, photoStore: photos, place: Demo.seongsan)
@@ -44,6 +44,11 @@ final class LeaveTraceTests: XCTestCase {
         let refs = vm.exhibition?.moments.map(\.photoRef) ?? []
         XCTAssertTrue(refs.contains("remote/abc-123.jpg"),
                       "the left moment carries the storage ref returned by upload, got \(refs)")
+
+        // The grid can render it: the new moment's ref resolves to a fetchable URL.
+        let left = vm.exhibition?.moments.first { $0.photoRef == "remote/abc-123.jpg" }
+        XCTAssertEqual(vm.photoURLs[try XCTUnwrap(left).id],
+                       URL(string: "https://photos.test/remote/abc-123.jpg"))
     }
 
     @MainActor

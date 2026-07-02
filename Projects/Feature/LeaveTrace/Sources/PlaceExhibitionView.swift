@@ -28,7 +28,7 @@ public struct PlaceExhibitionView: View {
                         LazyVGrid(columns: columns, spacing: 12) {
                             ForEach(ex.moments) { moment in
                                 Button { selected = moment } label: {
-                                    MomentGridCell(moment: moment)
+                                    MomentGridCell(moment: moment, photoURL: vm.photoURLs[moment.id])
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -53,6 +53,7 @@ public struct PlaceExhibitionView: View {
         .sheet(item: $selected) { m in
             MomentDetailView(
                 moment: m,
+                photoURL: vm.photoURLs[m.id],
                 placeName: vm.placeDisplayName,
                 onReport: { Task { await vm.report(m.id) } },
                 onHide: { Task { await vm.hide(m.id) } }
