@@ -115,9 +115,10 @@ private struct ClaimSheet: View {
                         Button { dismiss() } label: {
                             Text("닫기").traceType(.bodyMD).fontWeight(.bold)
                                 .foregroundStyle(TraceColor.textSecondary)
+                                .padding(.horizontal, 6).padding(.vertical, 4)
                         }
                     }
-                    .padding(.horizontal, 18).padding(.vertical, 10)
+                    .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 8)
                     .background(TraceColor.paper50)
                 }
         }

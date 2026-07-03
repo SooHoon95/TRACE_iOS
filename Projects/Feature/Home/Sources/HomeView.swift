@@ -102,13 +102,17 @@ public struct HomeView: View {
     }
 
     @ViewBuilder private var exhibitionSection: some View {
-        SectionHeader(title: "✨ 둘러볼 전시")
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 14) {
-                ForEach(vm.nearby) { place in
-                    ExhibitionTile(place: place.displayName,
-                                   contributors: place.contributorCount,
-                                   hasTop12: false)
+        // Only places that actually have an exhibition — empty places show nothing.
+        let exhibited = vm.nearby.filter { $0.momentCount > 0 }
+        if !exhibited.isEmpty {
+            SectionHeader(title: "✨ 둘러볼 전시")
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    ForEach(exhibited) { place in
+                        ExhibitionTile(place: place.displayName,
+                                       contributors: place.contributorCount,
+                                       hasTop12: false)
+                    }
                 }
             }
         }
@@ -124,7 +128,7 @@ public struct HomeView: View {
         let f = RelativeDateTimeFormatter()
         f.locale = Locale(identifier: "ko_KR")
         f.unitsStyle = .short
-        return f.localizedString(for: date, relativeTo: Date(timeIntervalSince1970: 1_718_001_000))
+        return f.localizedString(for: date, relativeTo: Date())
     }
 }
 

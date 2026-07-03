@@ -15,6 +15,7 @@ public struct MainTabFeatureView: View {
   private let store: any TraceStore
   private let user: User
   private let photoStore: any PhotoStore
+  private let location: any LocationProviding
   private let onSignOut: () -> Void
   @State private var selection = "home"
   @State private var presentingClaim = false
@@ -22,10 +23,12 @@ public struct MainTabFeatureView: View {
   public init(store: any TraceStore = Demo.store(),
               user: User = .demo,
               photoStore: any PhotoStore = LocalPhotoStore(),
+              location: any LocationProviding = FixedLocationProvider(),
               onSignOut: @escaping () -> Void = {}) {
     self.store = store
     self.user = user
     self.photoStore = photoStore
+    self.location = location
     self.onSignOut = onSignOut
   }
 
@@ -45,7 +48,7 @@ public struct MainTabFeatureView: View {
     }
     .background(TraceColor.paper50.ignoresSafeArea())
     .fullScreenCover(isPresented: $presentingClaim) {
-      ClaimModal(store: store, user: user, photoStore: photoStore)
+      ClaimModal(store: store, user: user, photoStore: photoStore, location: location)
     }
   }
 
@@ -77,24 +80,72 @@ private struct ClaimModal: View {
   let store: any TraceStore
   let user: User
   let photoStore: any PhotoStore
+  let location: any LocationProviding
   @Environment(\.dismiss) private var dismiss
+  @State private var place: Place?
+  @State private var failed = false
 
   var body: some View {
     NavigationStack {
-      LeaveTraceFeatureView(store: store, user: user, photoStore: photoStore, place: Demo.seongsan)
-        .toolbar(.hidden, for: .navigationBar)
-        .safeAreaInset(edge: .top) {
-          HStack {
-            Spacer()
-            Button { dismiss() } label: {
-              Text("닫기").traceType(.bodyMD).fontWeight(.bold)
-                .foregroundStyle(TraceColor.textSecondary)
-            }
-          }
-          .padding(.horizontal, 18).padding(.vertical, 10)
-          .background(TraceColor.paper50)
+      Group {
+        if let place {
+          LeaveTraceFeatureView(store: store, user: user, photoStore: photoStore, place: place)
+        } else if failed {
+          locationUnavailable
+        } else {
+          loading
         }
+      }
+      .toolbar(.hidden, for: .navigationBar)
+      .safeAreaInset(edge: .top) {
+        HStack {
+          Spacer()
+          Button { dismiss() } label: {
+            Text("닫기").traceType(.bodyMD).fontWeight(.bold)
+              .foregroundStyle(TraceColor.textSecondary)
+              .padding(.horizontal, 6).padding(.vertical, 4)
+          }
+        }
+        .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 8)
+        .background(TraceColor.paper50)
+      }
     }
+    .task { await resolveHere() }
+  }
+
+  /// Get the device's current position, then resolve-or-create the place there so the ＋ flow
+  /// claims at the user's real location (snaps to an existing place within radius).
+  private func resolveHere() async {
+    do {
+      let coord = try await location.current()
+      place = try await store.resolveOrCreate(at: coord, snapRadiusMeters: 40, suggestedName: "현재 위치")
+    } catch {
+      failed = true
+    }
+  }
+
+  private var loading: some View {
+    VStack(spacing: 12) {
+      ProgressView().controlSize(.large).tint(TraceColor.accent)
+      Text("현재 위치 확인 중…")
+        .traceType(.bodyMD).foregroundStyle(TraceColor.textSecondary)
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(TraceColor.paper50)
+  }
+
+  private var locationUnavailable: some View {
+    VStack(spacing: 10) {
+      Text("📍").font(.system(size: 40))
+      Text("위치를 가져오지 못했어요")
+        .traceType(.bodyLG).fontWeight(.bold).foregroundStyle(TraceColor.textPrimary)
+      Text("설정에서 위치 권한을 허용하면 지금 이 자리에 남길 수 있어요")
+        .traceType(.bodyMD).foregroundStyle(TraceColor.textMuted)
+        .multilineTextAlignment(.center)
+    }
+    .padding(.horizontal, 32)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(TraceColor.paper50)
   }
 }
 

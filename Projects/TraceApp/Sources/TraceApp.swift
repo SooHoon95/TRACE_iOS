@@ -14,6 +14,7 @@ import Infrastructure
 final class SessionStore: ObservableObject {
   let store: any TraceStore
   let photoStore: any PhotoStore
+  let location: any LocationProviding
   @Published private(set) var user: User?
 
   private let auth: HTTPAuthService?
@@ -27,6 +28,7 @@ final class SessionStore: ObservableObject {
       store = offline
       offlineStore = offline
       photoStore = HTTPPhotoStore(client: client)  // real /photos upload
+      location = LocationProvider()                // real CoreLocation for the ＋ flow
       auth = HTTPAuthService(client: client)
       user = nil  // login-first — a session arrives only after Apple/Kakao sign-in (T2.6)
       print("[TRACE] backend = HTTP API (\(BackendProvider.baseURLFromBundle() ?? "?")) — login required")
@@ -34,6 +36,7 @@ final class SessionStore: ObservableObject {
       store = Demo.store()
       offlineStore = nil
       photoStore = LocalPhotoStore()  // in-memory mock upload
+      location = FixedLocationProvider()  // fixed coord — no CoreLocation in mock mode
       auth = nil
       user = .demo  // mock/dev: no backend, no gate — straight into the app
       print("[TRACE] backend = in-memory mock (no TRACE_API_BASE_URL)")
@@ -80,6 +83,7 @@ struct TraceApp: App {
             store: session.store,
             user: user,
             photoStore: session.photoStore,
+            location: session.location,
             onSignOut: { Task { await session.signOut() } }
           )
         } else {
