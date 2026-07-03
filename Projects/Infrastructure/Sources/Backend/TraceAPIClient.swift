@@ -40,7 +40,10 @@ public struct TraceAPIClient: Sendable {
         return e
     }()
 
-    /// Parses ISO-8601 with or without (3- or 6-digit) fractional seconds — Pydantic emits microseconds.
+    /// Parses the backend's ISO-8601 timestamps, tolerant of every shape they arrive in:
+    /// microsecond fractional seconds (Pydantic), and — critically — **naive datetimes with no
+    /// timezone**, which is what SQLite returns on read-back (it drops tzinfo). A missing
+    /// timezone is treated as UTC, since we always store `datetime.now(timezone.utc)`.
     private static func parseDate(_ s: String) -> Date? {
         let frac = ISO8601DateFormatter()
         frac.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -48,18 +51,26 @@ public struct TraceAPIClient: Sendable {
         plain.formatOptions = [.withInternetDateTime]
         if let d = frac.date(from: s) ?? plain.date(from: s) { return d }
 
-        // Truncate microseconds → milliseconds, then retry.
-        guard let dot = s.firstIndex(of: ".") else { return nil }
-        var i = s.index(after: dot)
-        var digits = ""
-        while i < s.endIndex, s[i].isNumber {
-            digits.append(s[i])
-            i = s.index(after: i)
+        // Split on 'T' so the timezone search never trips over the date's own hyphens.
+        guard let tIdx = s.firstIndex(of: "T") else { return nil }
+        let datePart = String(s[...tIdx])                   // "2026-07-03T"
+        var timePart = String(s[s.index(after: tIdx)...])   // "14:21:26.693392[+09:00|Z]?"
+
+        var tz = "Z"   // naive datetime → assume UTC
+        if timePart.hasSuffix("Z") {
+            timePart.removeLast()
+        } else if let sign = timePart.lastIndex(where: { $0 == "+" || $0 == "-" }) {
+            tz = String(timePart[sign...])
+            timePart = String(timePart[..<sign])
         }
-        let rest = String(s[i...])
-        let head = String(s[..<dot])
-        let millis = String(digits.prefix(3))
-        return frac.date(from: "\(head).\(millis)\(rest)") ?? plain.date(from: head + rest)
+        // Normalize fractional seconds to ≤3 digits (ISO8601DateFormatter only accepts milliseconds).
+        if let dot = timePart.firstIndex(of: ".") {
+            let head = String(timePart[..<dot])
+            let digits = timePart[timePart.index(after: dot)...].prefix(while: { $0.isNumber })
+            timePart = "\(head).\(digits.prefix(3))"
+        }
+        let normalized = datePart + timePart + tz
+        return frac.date(from: normalized) ?? plain.date(from: normalized)
     }
 
     // MARK: - URL building
