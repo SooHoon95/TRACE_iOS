@@ -39,7 +39,7 @@ public struct CaptureComposer: View {
     let contributorCount: Int
     /// An optional preset preview image (e.g. catalog). Real captures come from the picker.
     let photo: Image?
-    let onSubmit: ((Draft) -> Void)?
+    let onSubmit: ((Draft) async -> Void)?
 
     @State private var caption: String = ""
     @State private var companion: Companion? = nil
@@ -48,11 +48,12 @@ public struct CaptureComposer: View {
     @State private var pickerItem: PhotosPickerItem?
     @State private var pickedImage: Image?
     @State private var pickedData: Data?
+    @State private var isSubmitting = false
 
     public init(place: String = "성수동 적산가옥",
                 contributorCount: Int = 0,
                 photo: Image? = nil,
-                onSubmit: ((Draft) -> Void)? = nil) {
+                onSubmit: ((Draft) async -> Void)? = nil) {
         self.place = place
         self.contributorCount = contributorCount
         self.photo = photo
@@ -86,15 +87,21 @@ public struct CaptureComposer: View {
                     FlowVibes(selected: vibe) { vibe = (vibe == $0 ? nil : $0) }
                 }
                 visibilityRow
-                TraceButton("이 자리에 남기기", size: .lg) {
-                    onSubmit?(Draft(caption: caption.isEmpty ? nil : caption,
-                                    companion: companion,
-                                    vibe: vibe,
-                                    visibility: isPrivate ? .privateOnly : .publicExhibit,
-                                    photoData: pickedData))
+                TraceButton(isSubmitting ? "남기는 중…" : "이 자리에 남기기", size: .lg) {
+                    guard !isSubmitting else { return }
+                    let draft = Draft(caption: caption.isEmpty ? nil : caption,
+                                      companion: companion,
+                                      vibe: vibe,
+                                      visibility: isPrivate ? .privateOnly : .publicExhibit,
+                                      photoData: pickedData)
+                    Task {
+                        isSubmitting = true
+                        await onSubmit?(draft)
+                        isSubmitting = false
+                    }
                 }
-                .disabled(!canSubmit)
-                .opacity(canSubmit ? 1 : 0.5)
+                .disabled(!canSubmit || isSubmitting)
+                .opacity((canSubmit && !isSubmitting) ? 1 : 0.5)
             }
             .padding(.horizontal, 18)
             .padding(.top, 18)
@@ -137,15 +144,32 @@ public struct CaptureComposer: View {
         .onChange(of: pickerItem) { newItem in
             guard let newItem else { return }
             Task {
-                if let data = try? await newItem.loadTransferable(type: Data.self),
-                   let uiImage = UIImage(data: data) {
-                    await MainActor.run {
-                        pickedData = data
-                        pickedImage = Image(uiImage: uiImage)
-                    }
+                guard let raw = try? await newItem.loadTransferable(type: Data.self),
+                      let (jpeg, image) = downscaledJPEG(from: raw) else { return }
+                await MainActor.run {
+                    pickedData = jpeg
+                    pickedImage = Image(uiImage: image)
                 }
             }
         }
+    }
+
+    /// Downscale + JPEG-compress so device photos (multi-MB HEIC) upload fast and reliably
+    /// instead of stalling. ~1600px / q0.8 lands around 200–500 KB.
+    private func downscaledJPEG(from data: Data,
+                                maxDimension: CGFloat = 1600,
+                                quality: CGFloat = 0.8) -> (data: Data, image: UIImage)? {
+        guard let source = UIImage(data: data) else { return nil }
+        let longest = max(source.size.width, source.size.height)
+        let scale = longest > maxDimension ? maxDimension / longest : 1
+        let target = CGSize(width: source.size.width * scale, height: source.size.height * scale)
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1   // don't multiply by device scale (keeps the output small)
+        let resized = UIGraphicsImageRenderer(size: target, format: format).image { _ in
+            source.draw(in: CGRect(origin: .zero, size: target))
+        }
+        guard let jpeg = resized.jpegData(compressionQuality: quality) else { return nil }
+        return (jpeg, resized)
     }
 
     private func captureLabel(_ text: String) -> some View {

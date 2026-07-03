@@ -100,7 +100,8 @@ public final class ClaimViewModel: ObservableObject {
             justJoinedAt = Date()        // only after a confirmed write
             errorMessage = nil
         } catch {
-            errorMessage = "남기지 못했어요. 다시 시도해줘"
+            // Surface the real reason (timeout / status / decode) so failures are diagnosable.
+            errorMessage = "\(error)"
         }
     }
 

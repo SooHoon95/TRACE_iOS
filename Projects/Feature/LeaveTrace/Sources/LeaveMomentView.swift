@@ -19,12 +19,21 @@ public struct LeaveMomentView: View {
                     place: vm.placeDisplayName,
                     contributorCount: vm.contributorCount
                 ) { draft in
-                    Task { await vm.claim(draft) }
+                    await vm.claim(draft)
                 }
             }
             .padding(.vertical, 24)
             .frame(maxWidth: .infinity)
         }
         .background(TraceColor.paper50.ignoresSafeArea())
+        .alert(
+            "남기지 못했어요",
+            isPresented: Binding(
+                get: { vm.errorMessage != nil },
+                set: { if !$0 { vm.errorMessage = nil } }
+            ),
+            actions: { Button("확인", role: .cancel) { vm.errorMessage = nil } },
+            message: { Text(vm.errorMessage ?? "") }
+        )
     }
 }
