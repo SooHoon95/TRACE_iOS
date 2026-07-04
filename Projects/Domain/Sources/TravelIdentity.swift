@@ -127,3 +127,127 @@ public enum TravelIdentity {
                                  total: moments.count)
     }
 }
+
+// MARK: - Highlight (Task 2 shape; populated in Task 3)
+
+/// Why a moment was surfaced as a highlight.
+public enum HighlightReason: Equatable, Sendable {
+    case representative   // 대표: exemplifies the dominant (vibe, companion) pair
+    case rare             // 희귀: the pair the traveler almost never leaves
+}
+
+/// A surfaced moment plus the reason it stands out.
+public struct Highlight: Equatable, Sendable {
+    public let moment: Moment
+    public let reason: HighlightReason
+
+    public init(moment: Moment, reason: HighlightReason) {
+        self.moment = moment
+        self.reason = reason
+    }
+}
+
+// MARK: - TravelIdentityModel
+
+/// How much data backs the card, gating the headline + hint copy (D4).
+public enum IdentityDataLevel: Equatable, Sendable {
+    case empty   // 0 moments
+    case low     // < lowDataThreshold total, or < lowDataThreshold with a vibe
+    case full
+}
+
+/// The whole card in one value type — the output of the pure `compute`.
+public struct TravelIdentityModel: Equatable, Sendable {
+    public let headline: String             // 칭호 (D1)
+    public let dataLevel: IdentityDataLevel
+    public let distribution: TraitDistribution
+    public let highlights: [Highlight]      // 0–2 (D2, populated in Task 3)
+    public let lowDataHint: String?         // set for .empty / .low
+
+    public init(headline: String,
+                dataLevel: IdentityDataLevel,
+                distribution: TraitDistribution,
+                highlights: [Highlight],
+                lowDataHint: String?) {
+        self.headline = headline
+        self.dataLevel = dataLevel
+        self.distribution = distribution
+        self.highlights = highlights
+        self.lowDataHint = lowDataHint
+    }
+}
+
+// MARK: - Headline table + compute (the pure function)
+
+public extension TravelIdentity {
+
+    /// Copy shown when the card can't yet form a distinct identity.
+    static let lowDataHintText = "순간을 더 남기면 정체성이 뚜렷해져요."
+    static let genericHeadline = "아직 정체성을 그리는 중"
+
+    /// 동행 prefix (D1). Combined with a vibe noun into the headline.
+    private static let companionPrefix: [Companion: String] = [
+        .partner: "둘이 걷는",
+        .family:  "함께하는",
+        .friends: "우르르 몰려다니는",
+        .solo:    "혼자 떠나는"
+    ]
+
+    /// 무드 noun (D1). The headline's core identity word.
+    private static let vibeNoun: [VibeTag: String] = [
+        .calm:      "고요 수집가",
+        .lively:    "활기 메이커",
+        .scenic:    "풍경 사냥꾼",
+        .foodie:    "맛집 탐험가",
+        .adventure: "모험가",
+        .hidden:    "숨은 곳 발굴러"
+    ]
+
+    /// Deterministic headline from a (dominant vibe, dominant companion) pair (D1).
+    /// - both present → "\(prefix) \(noun)" e.g. solo+scenic → "혼자 떠나는 풍경 사냥꾼"
+    /// - vibe only    → the noun alone e.g. "풍경 사냥꾼"
+    /// - companion only → "\(prefix) 여행자" e.g. "혼자 떠나는 여행자"
+    /// - neither      → the generic placeholder
+    static func headline(vibe: VibeTag?, companion: Companion?) -> String {
+        switch (vibe, companion) {
+        case let (v?, c?):
+            return "\(companionPrefix[c]!) \(vibeNoun[v]!)"
+        case let (v?, nil):
+            return vibeNoun[v]!
+        case let (nil, c?):
+            return "\(companionPrefix[c]!) 여행자"
+        case (nil, nil):
+            return genericHeadline
+        }
+    }
+
+    /// THE pure function: `[Moment] -> TravelIdentityModel`. No I/O, no clock, no locale —
+    /// same input (in any order) yields the same card. Highlights are wired in Task 3.
+    static func compute(_ moments: [Moment]) -> TravelIdentityModel {
+        let dist = distribution(moments)
+        let vibeBearing = dist.vibeCounts.values.reduce(0, +)
+
+        let level: IdentityDataLevel
+        if dist.total == 0 {
+            level = .empty
+        } else if dist.total < lowDataThreshold || vibeBearing < lowDataThreshold {
+            level = .low
+        } else {
+            level = .full
+        }
+
+        let headline = headline(vibe: dist.dominantVibe, companion: dist.dominantCompanion)
+        let hint = level == .full ? nil : lowDataHintText
+
+        return TravelIdentityModel(headline: headline,
+                                   dataLevel: level,
+                                   distribution: dist,
+                                   highlights: selectHighlights(moments, distribution: dist),
+                                   lowDataHint: hint)
+    }
+
+    /// 대표/희귀 highlight selection (D2). Stub in Task 2 (returns none); real logic in Task 3.
+    static func selectHighlights(_ moments: [Moment], distribution: TraitDistribution) -> [Highlight] {
+        []
+    }
+}
