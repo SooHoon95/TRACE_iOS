@@ -52,10 +52,13 @@ public struct TravelIdentityCardView: View {
                 .traceType(.displayLG)
                 .fontWeight(.heavy)
                 .foregroundStyle(TraceColor.paper0)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 6)
-            Text("\(name)님의 여행 성향")
-                .traceType(.bodySM)
-                .foregroundStyle(TraceColor.textOnDarkMuted)
+            if model.dataLevel != .empty {
+                Text("\(name)님의 여행 성향")
+                    .traceType(.bodySM)
+                    .foregroundStyle(TraceColor.textOnDarkMuted)
+            }
         }
     }
 
