@@ -8,13 +8,16 @@ import Router
 /// Ported 1:1 from the claude.ai/design `TRACE 나·설정` board. Navigation goes through the coordinator.
 public struct ProfileView: View {
     let user: User
+    let store: any TraceStore
     let nav: PassthroughSubject<NavigationEvent<TraceRoute>, Never>
     @StateObject private var vm: ProfileViewModel
+    @State private var showIdentityCard = false
 
     public init(user: User,
                 store: any TraceStore,
                 nav: PassthroughSubject<NavigationEvent<TraceRoute>, Never>) {
         self.user = user
+        self.store = store          // same object the VM uses — one data path for the card too
         self.nav = nav
         _vm = StateObject(wrappedValue: ProfileViewModel(store: store, userID: user.id))
     }
@@ -24,8 +27,9 @@ public struct ProfileView: View {
             VStack(spacing: 0) {
                 profileBlock
                 statsRow.padding(.bottom, 22)
-                wrappedCard.padding(.bottom, 14)
-                TraceButton("여행 정체성 카드 보기", variant: .soft, size: .lg) {}
+                TraceButton("여행 정체성 카드 보기", variant: .soft, size: .lg) {
+                    showIdentityCard = true
+                }
                 settingsRow.padding(.top, 14)
             }
             .padding(.horizontal, 20)
@@ -34,6 +38,9 @@ public struct ProfileView: View {
         }
         .background(TraceColor.paper50.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showIdentityCard) {
+            TravelIdentityCardScreen(user: user, store: store)
+        }
         .task { await vm.load() }
     }
 
@@ -82,45 +89,6 @@ public struct ProfileView: View {
         .clipShape(RoundedRectangle(cornerRadius: TraceRadius.md, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: TraceRadius.md, style: .continuous)
             .strokeBorder(TraceColor.hairline, lineWidth: 1))
-    }
-
-    private var wrappedCard: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("TRACE WRAPPED")
-                    .traceType(.eyebrow)
-                    .foregroundStyle(TraceColor.accentSoft)
-                Spacer()
-                Text("준비 중")
-                    .traceType(.bodyXS).fontWeight(.bold)
-                    .foregroundStyle(TraceColor.textOnDarkMuted)
-                    .padding(.vertical, 4).padding(.horizontal, 9)
-                    .background(TraceColor.surfaceDarkCard, in: Capsule())
-            }
-            VStack(spacing: 10) {
-                Text("⌖")
-                    .font(.system(size: 24))
-                    .foregroundStyle(TraceColor.accentSoft)
-                    .frame(width: 52, height: 52)
-                    .background(TraceColor.surfaceDarkCard, in: Circle())
-                Text("너의 여행 정체성, 곧 만나요")
-                    .traceType(.bodyLG).fontWeight(.bold)
-                    .foregroundStyle(TraceColor.paper0)
-                Text("순간이 쌓이면 너만의 칭호와\n발자취 카드가 열려요.")
-                    .traceType(.bodySM)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(TraceColor.textOnDarkMuted)
-            }
-            .padding(.top, 22).padding(.bottom, 8)
-        }
-        .padding(22)
-        .background(
-            LinearGradient(colors: [TraceColor.char700, TraceColor.char900],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: TraceRadius.xxl, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: TraceRadius.xxl, style: .continuous)
-            .strokeBorder(TraceColor.surfaceDarkLine, lineWidth: 1))
     }
 
     private var settingsRow: some View {
