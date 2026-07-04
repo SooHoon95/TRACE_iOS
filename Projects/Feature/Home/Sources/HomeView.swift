@@ -11,13 +11,19 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var isLoading = false
 
     private let store: any TraceStore
-    init(store: any TraceStore) { self.store = store }
+    private let location: any LocationProviding
+    init(store: any TraceStore, location: any LocationProviding) {
+        self.store = store
+        self.location = location
+    }
 
     func load() async {
         isLoading = true
         defer { isLoading = false }
         recent = (try? await store.feed(near: nil)) ?? []
-        nearby = (try? await store.nearby(Demo.seongsan.coordinate, radiusMeters: 1_000_000)) ?? []
+        // 내 주변 = 실제 현재 위치 반경 (권한 없거나 실패 시 데모 좌표로 폴백).
+        let here = (try? await location.current()) ?? Demo.seongsan.coordinate
+        nearby = (try? await store.nearby(here, radiusMeters: 5_000)) ?? []
     }
 
     func placeName(for moment: Moment) -> String {
@@ -33,11 +39,13 @@ public struct HomeView: View {
     private let photoStore: any PhotoStore
     @State private var claimingPlace: Place?
 
-    public init(store: any TraceStore, user: User, photoStore: any PhotoStore = LocalPhotoStore()) {
+    public init(store: any TraceStore, user: User,
+                photoStore: any PhotoStore = LocalPhotoStore(),
+                location: any LocationProviding = FixedLocationProvider()) {
         self.store = store
         self.user = user
         self.photoStore = photoStore
-        _vm = StateObject(wrappedValue: HomeViewModel(store: store))
+        _vm = StateObject(wrappedValue: HomeViewModel(store: store, location: location))
     }
 
     public var body: some View {

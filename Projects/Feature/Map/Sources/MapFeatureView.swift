@@ -8,12 +8,20 @@ import LeaveTrace
 @MainActor
 final class MapViewModel: ObservableObject {
     @Published private(set) var places: [Place] = []
+    @Published private(set) var center: Coordinate?
     private let store: any TraceStore
-    init(store: any TraceStore) { self.store = store }
+    private let location: any LocationProviding
+    init(store: any TraceStore, location: any LocationProviding) {
+        self.store = store
+        self.location = location
+    }
 
     func load() async {
-        places = (try? await store.nearby(Coordinate(latitude: 33.38, longitude: 126.55),
-                                          radiusMeters: 5_000_000)) ?? []
+        // 실제 현재 위치 기준으로 주변 조회 (권한 없으면 제주 폴백).
+        let here = (try? await location.current()) ?? Coordinate(latitude: 33.38, longitude: 126.55)
+        center = here
+        // 전시 있는 장소만(순간 ≥ 1) 핀으로 — 빈 장소는 지도에 안 뜸.
+        places = ((try? await store.nearby(here, radiusMeters: 30_000)) ?? []).filter { $0.momentCount > 0 }
     }
 }
 
@@ -25,23 +33,26 @@ public struct MapFeatureView: View {
     private let photoStore: any PhotoStore
     @State private var preview: Place?
     @State private var opening: Place?
+    @State private var position: MapCameraPosition = .region(MapFeatureView.jeju)
 
-    private static let jeju = MKCoordinateRegion(
+    fileprivate static let jeju = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 33.38, longitude: 126.55),
         span: MKCoordinateSpan(latitudeDelta: 0.8, longitudeDelta: 0.8)
     )
 
     public init(store: any TraceStore = Demo.store(),
                 user: User = .demo,
-                photoStore: any PhotoStore = LocalPhotoStore()) {
+                photoStore: any PhotoStore = LocalPhotoStore(),
+                location: any LocationProviding = FixedLocationProvider()) {
         self.store = store
         self.user = user
         self.photoStore = photoStore
-        _vm = StateObject(wrappedValue: MapViewModel(store: store))
+        _vm = StateObject(wrappedValue: MapViewModel(store: store, location: location))
     }
 
     public var body: some View {
-        Map(initialPosition: .region(Self.jeju)) {
+        Map(position: $position) {
+            UserAnnotation()
             ForEach(vm.places) { place in
                 Annotation(place.displayName, coordinate: coord(place)) {
                     Button { preview = place } label: {
@@ -56,7 +67,14 @@ public struct MapFeatureView: View {
         .mapStyle(.standard(elevation: .flat))
         .ignoresSafeArea(edges: .top)
         .overlay(alignment: .bottom) { previewCard }
-        .task { await vm.load() }
+        .task {
+            await vm.load()
+            if let c = vm.center {
+                position = .region(MKCoordinateRegion(
+                    center: CLLocationCoordinate2D(latitude: c.latitude, longitude: c.longitude),
+                    span: MKCoordinateSpan(latitudeDelta: 0.04, longitudeDelta: 0.04)))
+            }
+        }
         .sheet(item: $opening) { place in
             ClaimSheet(store: store, user: user, photoStore: photoStore, place: place)
         }

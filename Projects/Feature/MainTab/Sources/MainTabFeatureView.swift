@@ -65,10 +65,10 @@ public struct MainTabFeatureView: View {
 
   @ViewBuilder private var content: some View {
     switch selection {
-    case "map":        MapFeatureView(store: store, user: user, photoStore: photoStore)
+    case "map":        MapFeatureView(store: store, user: user, photoStore: photoStore, location: location)
     case "collection": CollectionFeatureView(store: store, userID: user.id, photoStore: photoStore)
-    case "me":         IdentityFeatureView(user: user, onSignOut: onSignOut)
-    default:           HomeView(store: store, user: user, photoStore: photoStore)
+    case "me":         IdentityFeatureView(user: user, store: store, onSignOut: onSignOut)
+    default:           HomeView(store: store, user: user, photoStore: photoStore, location: location)
     }
   }
 }

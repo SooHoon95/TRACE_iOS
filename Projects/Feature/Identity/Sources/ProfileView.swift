@@ -8,19 +8,15 @@ import Router
 /// Ported 1:1 from the claude.ai/design `TRACE 나·설정` board. Navigation goes through the coordinator.
 public struct ProfileView: View {
     let user: User
-    let momentCount: Int
-    let placeCount: Int
-    let joinedCount: Int
     let nav: PassthroughSubject<NavigationEvent<TraceRoute>, Never>
+    @StateObject private var vm: ProfileViewModel
 
     public init(user: User,
-                nav: PassthroughSubject<NavigationEvent<TraceRoute>, Never>,
-                momentCount: Int = 12, placeCount: Int = 5, joinedCount: Int = 8) {
+                store: any TraceStore,
+                nav: PassthroughSubject<NavigationEvent<TraceRoute>, Never>) {
         self.user = user
         self.nav = nav
-        self.momentCount = momentCount
-        self.placeCount = placeCount
-        self.joinedCount = joinedCount
+        _vm = StateObject(wrappedValue: ProfileViewModel(store: store, userID: user.id))
     }
 
     public var body: some View {
@@ -38,6 +34,7 @@ public struct ProfileView: View {
         }
         .background(TraceColor.paper50.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .task { await vm.load() }
     }
 
     private var profileBlock: some View {
@@ -47,7 +44,7 @@ public struct ProfileView: View {
                 Text(user.nickname)
                     .traceType(.displaySM).fontWeight(.heavy)
                     .foregroundStyle(TraceColor.textPrimary)
-                Text("여행자 · 2026.06 합류")
+                Text("여행자 · \(Self.joinText(user.createdAt)) 합류")
                     .traceType(.bodySM).fontWeight(.semibold)
                     .foregroundStyle(TraceColor.textMuted)
             }
@@ -57,10 +54,17 @@ public struct ProfileView: View {
 
     private var statsRow: some View {
         HStack(spacing: 10) {
-            stat(momentCount, "순간")
-            stat(placeCount, "장소")
-            stat(joinedCount, "합류한 자리")
+            stat(vm.momentCount, "순간")
+            stat(vm.placeCount, "장소")
+            stat(vm.joinedCount, "합류한 자리")
         }
+    }
+
+    private static func joinText(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ko_KR")
+        f.dateFormat = "yyyy.MM"
+        return f.string(from: date)
     }
 
     private func stat(_ value: Int, _ label: String) -> some View {
