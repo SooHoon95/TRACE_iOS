@@ -246,8 +246,65 @@ public extension TravelIdentity {
                                    lowDataHint: hint)
     }
 
-    /// 대표/희귀 highlight selection (D2). Stub in Task 2 (returns none); real logic in Task 3.
+    /// 대표/희귀 highlight selection (D2), fully deterministic from `[Moment]` alone.
+    ///
+    /// Candidates must have a **fully-defined** `(vibe, companion)` pair.
+    /// - 대표 (representative): a moment of the dominant `(vibe, companion)` pair; if the dominant
+    ///   axes never co-occur, the most-frequent pair (tie-break by enum order) — newest wins,
+    ///   then smallest `id.uuidString`.
+    /// - 희귀 (rare): a moment of the lowest-frequency pair — oldest wins, then smallest `id.uuidString`.
+    /// - If 대표 and 희귀 resolve to the same moment (tiny sets), only 대표 is kept.
     static func selectHighlights(_ moments: [Moment], distribution: TraitDistribution) -> [Highlight] {
-        []
+        struct Pair: Hashable { let vibe: VibeTag; let companion: Companion }
+
+        let candidates: [(moment: Moment, pair: Pair)] = moments.compactMap { m in
+            guard let v = m.vibe, let c = m.companion else { return nil }
+            return (m, Pair(vibe: v, companion: c))
+        }
+        guard !candidates.isEmpty else { return [] }
+
+        var pairCount: [Pair: Int] = [:]
+        for c in candidates { pairCount[c.pair, default: 0] += 1 }
+
+        // Newest-first (tie: smallest uuid) for 대표; oldest-first (tie: smallest uuid) for 희귀.
+        func newest(_ pool: [Moment]) -> Moment {
+            pool.sorted { a, b in
+                a.createdAt != b.createdAt ? a.createdAt > b.createdAt : a.id.uuidString < b.id.uuidString
+            }.first!
+        }
+        func oldest(_ pool: [Moment]) -> Moment {
+            pool.sorted { a, b in
+                a.createdAt != b.createdAt ? a.createdAt < b.createdAt : a.id.uuidString < b.id.uuidString
+            }.first!
+        }
+
+        // 대표 pool: dominant pair if any moment has it, else the most-frequent pair.
+        let dominantPair: Pair? = {
+            guard let v = distribution.dominantVibe, let c = distribution.dominantCompanion else { return nil }
+            return Pair(vibe: v, companion: c)
+        }()
+        let repPool: [Moment]
+        if let dp = dominantPair, pairCount[dp] != nil {
+            repPool = candidates.filter { $0.pair == dp }.map(\.moment)
+        } else {
+            let maxCount = pairCount.values.max()!
+            let topPair = pairCount.filter { $0.value == maxCount }.keys.min { l, r in
+                (VibeTag.allCases.firstIndex(of: l.vibe)!, Companion.allCases.firstIndex(of: l.companion)!)
+                    < (VibeTag.allCases.firstIndex(of: r.vibe)!, Companion.allCases.firstIndex(of: r.companion)!)
+            }!
+            repPool = candidates.filter { $0.pair == topPair }.map(\.moment)
+        }
+        let representative = newest(repPool)
+
+        // 희귀 pool: every candidate whose pair is at the minimum frequency.
+        let minCount = pairCount.values.min()!
+        let rarePool = candidates.filter { pairCount[$0.pair] == minCount }.map(\.moment)
+        let rare = oldest(rarePool)
+
+        var result = [Highlight(moment: representative, reason: .representative)]
+        if rare.id != representative.id {
+            result.append(Highlight(moment: rare, reason: .rare))
+        }
+        return result
     }
 }
