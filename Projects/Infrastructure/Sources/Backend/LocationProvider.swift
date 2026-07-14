@@ -10,8 +10,14 @@ public final class LocationProvider: NSObject, LocationProviding {
 
     private let manager = CLLocationManager()
     private var continuation: CheckedContinuation<Coordinate, Error>?
+    private var timeoutTask: Task<Void, Never>?
+    private let timeout: TimeInterval
 
-    public override init() {
+    /// - Parameter timeout: hard cap on how long `current()` waits for a CoreLocation callback
+    ///   before giving up. Guards against the callback never arriving (e.g. a simulator with no
+    ///   location set), which would otherwise suspend the caller forever.
+    public init(timeout: TimeInterval = 8) {
+        self.timeout = timeout
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
@@ -24,6 +30,16 @@ public final class LocationProvider: NSObject, LocationProviding {
                 return
             }
             continuation = cont
+            // CoreLocation can deliver NEITHER a fix nor an error (notably a simulator with no
+            // location configured), which would leave this continuation suspended forever and
+            // hang every caller (Home feed, Map, the ＋ claim flow). A timeout guarantees the
+            // continuation always resumes so callers hit their fallback / error path instead.
+            timeoutTask = Task { @MainActor [weak self] in
+                let ns = UInt64((self?.timeout ?? 8) * 1_000_000_000)
+                try? await Task.sleep(nanoseconds: ns)
+                guard !Task.isCancelled else { return }
+                self?.finish(.failure(LocationError.unavailable))
+            }
             switch manager.authorizationStatus {
             case .authorizedWhenInUse, .authorizedAlways:
                 manager.requestLocation()
@@ -38,6 +54,8 @@ public final class LocationProvider: NSObject, LocationProviding {
     }
 
     private func finish(_ result: Result<Coordinate, Error>) {
+        timeoutTask?.cancel()
+        timeoutTask = nil
         guard let cont = continuation else { return }
         continuation = nil
         cont.resume(with: result)
